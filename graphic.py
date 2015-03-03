@@ -1,6 +1,7 @@
 __author__ = 'Khanh'
 import Tkinter as tk
 import createAlgorithm as ca
+import solveAlgorithm as sa
 import sys
 #def renderGrid(canvas, width, height, grid):
 
@@ -23,16 +24,15 @@ class GUI:
         self.var.set('Recursive Backtracker')
         self.choices = ['Recursive Backtracker', 'Kruskal']
 
-
-
-
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
         self.menu = tk.OptionMenu(self.master, self.var, *self.choices)
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
+        self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
         self.canvas.pack()
         self.createButton.pack()
         self.menu.pack()
+        self.solveButton.pack()
 
     def createMaze(self):
         algo = self.var.get()
@@ -41,11 +41,12 @@ class GUI:
             grid = ca.recursiveBacktracker(self.grid, self.size)
         elif algo == 'Kruskal':
             grid = ca.kruskal(self.grid, self.size)
-        self.printGrid()
-        no_de = self.deadEndCount()
-        print no_de
         self.canvas.delete(tk.ALL)
         self.drawGrid()
+
+    def solveMaze(self):
+        path_list = sa.bfs(self.grid, self.size)
+        print path_list
 
     def drawGrid(self):
         for r in range(self.size):
