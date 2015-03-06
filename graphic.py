@@ -29,10 +29,14 @@ class GUI:
         self.menu = tk.OptionMenu(self.master, self.var, *self.choices)
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
+        self.saveButton = tk.Button(self.master, text="Save", command=self.saveGrid)
+        self.loadButton = tk.Button(self.master, text="Load", command=self.loadGrid)
         self.canvas.pack()
         self.createButton.pack()
         self.menu.pack()
         self.solveButton.pack()
+        self.saveButton.pack()
+        self.loadButton.pack()
 
     def createMaze(self):
         algo = self.var.get()
@@ -45,7 +49,7 @@ class GUI:
         self.drawGrid()
 
     def solveMaze(self):
-        path_list = sa.bfs(self.grid, self.size)
+        path_list = sa.dfs(self.grid, self.size)
         print path_list
 
     def drawGrid(self):
@@ -83,3 +87,30 @@ class GUI:
                     if (i!=0 or j!=0) and (i!=self.size-1 or j!=self.size-1):
                         num_de += 1
         return num_de
+
+    def saveGrid(self):
+        fileName = raw_input("Input file name to save: ")
+        f = open(fileName, 'w')
+        f.write(str(self.size) + "\n")
+        for i in range(self.size):
+            for j in range(self.size):
+                f.write(str(self.grid[i][j].top))
+                f.write(str(self.grid[i][j].right))
+                f.write(str(self.grid[i][j].bottom))
+                f.write(str(self.grid[i][j].left))
+                f.write(" ")
+            f.write("\n")
+
+    def loadGrid(self):
+        fileName = raw_input("Input file name to load: ")
+        f = open(fileName, 'r')
+        self.size = int(f.readline())
+        self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
+        for i in range(self.size):
+            s = f.readline()
+            for j in range(self.size):
+                self.grid[i][j].top = int(s[j*5])
+                self.grid[i][j].right = int(s[j*5+1])
+                self.grid[i][j].bottom = int(s[j*5+2])
+                self.grid[i][j].left = int(s[j*5+3])
+        self.drawGrid()
