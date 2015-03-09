@@ -23,6 +23,8 @@ class GUI:
         self.var = tk.StringVar(self.master)
         self.var.set('Recursive Backtracker')
         self.choices = ['Recursive Backtracker', 'Kruskal']
+        self.gridcon = 1
+        self.solutioncon = 1
 
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
@@ -31,12 +33,16 @@ class GUI:
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
         self.saveButton = tk.Button(self.master, text="Save", command=self.saveGrid)
         self.loadButton = tk.Button(self.master, text="Load", command=self.loadGrid)
+        self.gridButton = tk.Button(self.master, text="Grid", command=self.gridControl)
+        self.solutionButton = tk.Button(self.master, text="Solution", command=self.solutionControl)
         self.canvas.pack()
         self.createButton.pack()
         self.menu.pack()
         self.solveButton.pack()
         self.saveButton.pack()
         self.loadButton.pack()
+        self.gridButton.pack()
+        self.solutionButton.pack()
 
     def createMaze(self):
         algo = self.var.get()
@@ -49,20 +55,31 @@ class GUI:
         self.drawGrid()
 
     def solveMaze(self):
-        path_list = sa.dfs(self.grid, self.size)
-        print path_list
+        self.path_list = sa.dfs(self.grid, self.size)
+        self.drawSolution()
+        self.drawGrid()
+        #print self.path_list
 
     def drawGrid(self):
         for r in range(self.size):
             for c in range(self.size):
                 if self.grid[r][c].top == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellWidth*r, 10+self.cellWidth*(c+1), 10+self.cellWidth*r)
+                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
                 if self.grid[r][c].right == 1:
-                    self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellWidth*r, 10+self.cellWidth*(c+1), 10+self.cellWidth*(r+1))
+                    self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
                 if self.grid[r][c].bottom == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellWidth*(r+1), 10+self.cellWidth*(c+1), 10+self.cellWidth*(r+1))
+                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
                 if self.grid[r][c].left == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellWidth*r, 10+self.cellWidth*c, 10+self.cellWidth*(r+1))
+                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
+
+    def drawSolution(self):
+        for i in range(len(self.path_list)):
+            path = self.path_list[i]
+            for j in range(len(path)):
+                r = path[j][0]
+                c = path[j][1]
+                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='green', outline='green')
+
 
     #function to help with debugging
     def printGrid(self):
@@ -114,3 +131,25 @@ class GUI:
                 self.grid[i][j].bottom = int(s[j*5+2])
                 self.grid[i][j].left = int(s[j*5+3])
         self.drawGrid()
+
+    def gridControl(self):
+        self.canvas.delete(tk.ALL)
+        if self.solutioncon == 1:
+            self.drawSolution()
+        if self.gridcon == 1:
+            self.gridcon = 0
+        else:
+            self.drawGrid()
+            self.gridcon = 1
+
+
+    def solutionControl(self):
+        self.canvas.delete(tk.ALL)
+        if self.solutioncon == 1:
+            self.solutioncon = 0
+        else:
+            self.drawSolution()
+            self.solutioncon = 1
+        if self.gridcon == 1:
+            self.drawGrid()
+
