@@ -20,44 +20,77 @@ class GUI:
         self.size = size
         self.cellWidth = (w - 20)/size
         self.cellHeight = (h - 20)/size
-        self.var = tk.StringVar(self.master)
-        self.var.set('Recursive Backtracker')
+        self.num_de = 0
+        self.no_path = 0
+        self.shortestPathLength = sys.maxint
+        self.algoName = tk.StringVar()
+        self.algoName.set('Recursive Backtracker')
+        self.noPath = tk.StringVar()
+        self.noPath.set('Number of paths: ')
+        self.noDE = tk.StringVar()
+        self.noDE.set('Number of deadends: ')
+        self.shortestPath = tk.StringVar()
+        self.shortestPath.set('Shortest path length: ')
         self.choices = ['Recursive Backtracker', 'Kruskal']
         self.gridcon = 1
         self.solutioncon = 1
 
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
-        self.menu = tk.OptionMenu(self.master, self.var, *self.choices)
+        self.menu = tk.OptionMenu(self.master, self.algoName, *self.choices)
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
         self.saveButton = tk.Button(self.master, text="Save", command=self.saveGrid)
         self.loadButton = tk.Button(self.master, text="Load", command=self.loadGrid)
         self.gridButton = tk.Button(self.master, text="Grid", command=self.gridControl)
         self.solutionButton = tk.Button(self.master, text="Solution", command=self.solutionControl)
-        self.canvas.pack()
-        self.createButton.pack()
-        self.menu.pack()
-        self.solveButton.pack()
-        self.saveButton.pack()
-        self.loadButton.pack()
-        self.gridButton.pack()
-        self.solutionButton.pack()
+        self.pathText = tk.Label(self.master, textvariable=self.noPath)
+        self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
+        self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
+
+        self.canvas.grid(row=0, column=0, rowspan=25)
+        self.deadEndText.grid(row=0, column=1)
+        self.pathText.grid(row=1, column=1)
+        self.shortestPathText.grid(row=2, column=1)
+        self.createButton.grid(row=3, column=1)
+        self.menu.grid(row=4, column=1)
+        self.solveButton.grid(row=5, column=1)
+        self.saveButton.grid(row=6, column=1)
+        self.loadButton.grid(row=7, column=1)
+        self.gridButton.grid(row=8, column =1)
+        self.solutionButton.grid(row=9, column =1)
+
 
     def createMaze(self):
-        algo = self.var.get()
+        algo = self.algoName.get()
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
+        self.num_de = 0
+        self.no_path = 0
+        self.shortestPathLength = sys.maxint
         if algo == 'Recursive Backtracker':
-            grid = ca.recursiveBacktracker(self.grid, self.size)
+            self.grid = ca.recursiveBacktracker(self.grid, self.size)
         elif algo == 'Kruskal':
-            grid = ca.kruskal(self.grid, self.size)
+            self.grid = ca.kruskal(self.grid, self.size)
         self.canvas.delete(tk.ALL)
+        self.deadEndCount()
+        self.noDE.set('Number of deadends: ' + str(self.num_de))
+        self.noPath.set('Number of paths: ')
+        self.shortestPath.set('Shortest path length: ')
         self.drawGrid()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
         self.drawSolution()
         self.drawGrid()
+        self.no_path = len(self.path_list)
+        for i in range(len(self.path_list)):
+            if len(self.path_list[i]) < self.shortestPathLength  :
+                self.shortestPathLength = len(self.path_list[i])
+        self.noPath.set('Number of paths: ' + str(self.no_path))
+        if self.no_path != 0:
+            self.shortestPath.set('Shortest path length: ' + str(self.shortestPathLength))
+        else:
+             self.shortestPath.set('Shortest path length: ')
         #print self.path_list
 
     def drawGrid(self):
@@ -80,7 +113,6 @@ class GUI:
                 c = path[j][1]
                 self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='green', outline='green')
 
-
     #function to help with debugging
     def printGrid(self):
         for i in range(self.size):
@@ -96,14 +128,12 @@ class GUI:
         self.master.mainloop()
 
     def deadEndCount(self):
-        num_de = 0
         for i in range(self.size):
             for j in range(self.size):
                 temp = self.grid[i][j]
                 if temp.top + temp.right + temp.bottom + temp.left == 3:
                     if (i!=0 or j!=0) and (i!=self.size-1 or j!=self.size-1):
-                        num_de += 1
-        return num_de
+                        self.num_de += 1
 
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
@@ -122,6 +152,8 @@ class GUI:
         fileName = raw_input("Input file name to load: ")
         f = open(fileName, 'r')
         self.size = int(f.readline())
+        self.cellWidth = (self.w - 20)/self.size
+        self.cellHeight = (self.h - 20)/self.size
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         for i in range(self.size):
             s = f.readline()
