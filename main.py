@@ -11,7 +11,7 @@ canvasWidth = 820
 canvasHeight = 820
 sys.setrecursionlimit(10000)
 
-gui = graphic.GUI(820, 820, mazeSize)
+gui = graphic.GUI(canvasWidth, canvasHeight, mazeSize)
 gui.createWindow()
 gui.run()
 
