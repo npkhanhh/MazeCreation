@@ -3,7 +3,11 @@ import Tkinter as tk
 import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
-#def renderGrid(canvas, width, height, grid):
+
+#### Some global variables
+noPathString = 'Number of paths: '
+noDEString = 'Number of deadends: '
+shortestPathString = 'Shortest path length: '
 
 class Cell:
     def __init__(self):
@@ -26,11 +30,11 @@ class GUI:
         self.algoName = tk.StringVar()
         self.algoName.set('Recursive Backtracker')
         self.noPath = tk.StringVar()
-        self.noPath.set('Number of paths: ')
+        self.noPath.set(noPathString)
         self.noDE = tk.StringVar()
-        self.noDE.set('Number of deadends: ')
+        self.noDE.set(noDEString)
         self.shortestPath = tk.StringVar()
-        self.shortestPath.set('Shortest path length: ')
+        self.shortestPath.set(shortestPathString)
         self.choices = ['Recursive Backtracker', 'Kruskal']
         self.gridcon = 1
         self.solutioncon = 1
@@ -73,9 +77,9 @@ class GUI:
             self.grid = ca.kruskal(self.grid, self.size)
         self.canvas.delete(tk.ALL)
         self.deadEndCount()
-        self.noDE.set('Number of deadends: ' + str(self.num_de))
-        self.noPath.set('Number of paths: ')
-        self.shortestPath.set('Shortest path length: ')
+        self.noDE.set(noDEString + str(self.num_de))
+        self.noPath.set(noPathString)
+        self.shortestPath.set(shortestPathString)
         self.drawGrid()
 
     def solveMaze(self):
@@ -86,11 +90,11 @@ class GUI:
         for i in range(len(self.path_list)):
             if len(self.path_list[i]) < self.shortestPathLength  :
                 self.shortestPathLength = len(self.path_list[i])
-        self.noPath.set('Number of paths: ' + str(self.no_path))
+        self.noPath.set(noPathString + str(self.no_path))
         if self.no_path != 0:
-            self.shortestPath.set('Shortest path length: ' + str(self.shortestPathLength))
+            self.shortestPath.set(shortestPathString + str(self.shortestPathLength))
         else:
-             self.shortestPath.set('Shortest path length: ')
+             self.shortestPath.set(shortestPathString)
         #print self.path_list
 
     def drawGrid(self):
@@ -162,6 +166,11 @@ class GUI:
                 self.grid[i][j].right = int(s[j*5+1])
                 self.grid[i][j].bottom = int(s[j*5+2])
                 self.grid[i][j].left = int(s[j*5+3])
+        self.canvas.delete(tk.ALL)
+        self.deadEndCount()
+        self.noDE.set(noDEString + str(self.num_de))
+        self.noPath.set(noPathString)
+        self.shortestPath.set(shortestPathString)
         self.drawGrid()
 
     def gridControl(self):
