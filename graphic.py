@@ -42,6 +42,7 @@ class GUI:
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
         self.menu = tk.OptionMenu(self.master, self.algoName, *self.choices)
+        self.sizeEntry = tk.Entry(self.master)
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
         self.saveButton = tk.Button(self.master, text="Save", command=self.saveGrid)
@@ -56,17 +57,22 @@ class GUI:
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
         self.shortestPathText.grid(row=2, column=1)
-        self.createButton.grid(row=3, column=1)
-        self.menu.grid(row=4, column=1)
-        self.solveButton.grid(row=5, column=1)
-        self.saveButton.grid(row=6, column=1)
-        self.loadButton.grid(row=7, column=1)
-        self.gridButton.grid(row=8, column =1)
-        self.solutionButton.grid(row=9, column =1)
+        self.sizeEntry.grid(row=3, column=1)
+        self.sizeEntry.insert(0, str(self.size))
+        self.createButton.grid(row=4, column=1)
+        self.menu.grid(row=5, column=1)
+        self.solveButton.grid(row=6, column=1)
+        self.saveButton.grid(row=7, column=1)
+        self.loadButton.grid(row=8, column=1)
+        self.gridButton.grid(row=9, column =1)
+        self.solutionButton.grid(row=10, column =1)
 
 
     def createMaze(self):
         algo = self.algoName.get()
+        self.size = int(self.sizeEntry.get())
+        self.cellWidth = (self.w - 20)/self.size
+        self.cellHeight = (self.h - 20)/self.size
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         self.num_de = 0
         self.no_path = 0
@@ -156,6 +162,7 @@ class GUI:
         fileName = raw_input("Input file name to load: ")
         f = open(fileName, 'r')
         self.size = int(f.readline())
+        self.sizeEntry.insert(0, str(self.size))
         self.cellWidth = (self.w - 20)/self.size
         self.cellHeight = (self.h - 20)/self.size
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
