@@ -24,7 +24,8 @@ class GUI:
         self.size = size
         self.cellWidth = (w - 20)/size
         self.cellHeight = (h - 20)/size
-        self.num_de = 0
+        self.de = []
+        self.decontrol = 0
         self.no_path = 0
         self.shortestPathLength = sys.maxint
         self.algoName = tk.StringVar()
@@ -49,6 +50,7 @@ class GUI:
         self.loadButton = tk.Button(self.master, text="Load", command=self.loadGrid)
         self.gridButton = tk.Button(self.master, text="Grid", command=self.gridControl)
         self.solutionButton = tk.Button(self.master, text="Solution", command=self.solutionControl)
+        self.deadEndButton = tk.Button(self.master, text="Deadend", command=self.visualizeDeadend)
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
@@ -64,8 +66,9 @@ class GUI:
         self.solveButton.grid(row=6, column=1)
         self.saveButton.grid(row=7, column=1)
         self.loadButton.grid(row=8, column=1)
-        self.gridButton.grid(row=9, column =1)
-        self.solutionButton.grid(row=10, column =1)
+        self.gridButton.grid(row=9, column=1)
+        self.solutionButton.grid(row=10, column=1)
+        self.deadEndButton.grid(row=11, column=1)
 
 
     def createMaze(self):
@@ -83,14 +86,14 @@ class GUI:
             self.grid = ca.kruskal(self.grid, self.size)
         self.canvas.delete(tk.ALL)
         self.deadEndCount()
-        self.noDE.set(noDEString + str(self.num_de))
+        self.noDE.set(noDEString + str(len(self.de)))
         self.noPath.set(noPathString)
         self.shortestPath.set(shortestPathString)
         self.drawGrid()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
-        self.drawSolution()
+        self.drawSolution(0)
         self.drawGrid()
         self.no_path = len(self.path_list)
         for i in range(len(self.path_list)):
@@ -115,14 +118,18 @@ class GUI:
                 if self.grid[r][c].left == 1:
                     self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
 
-    def drawSolution(self):
+    def drawSolution(self, mode):
+        #if mode == 0:
+        #    outColor = 'green'
+        #else:
+        #    outColor = 'black'
+        outColor = 'green'
         for i in range(len(self.path_list)):
             path = self.path_list[i]
             for j in range(len(path)):
                 r = path[j][0]
                 c = path[j][1]
-                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='green', outline='green')
-
+                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='green', outline=outColor)
     #function to help with debugging
     def printGrid(self):
         for i in range(self.size):
@@ -143,7 +150,7 @@ class GUI:
                 temp = self.grid[i][j]
                 if temp.top + temp.right + temp.bottom + temp.left == 3:
                     if (i!=0 or j!=0) and (i!=self.size-1 or j!=self.size-1):
-                        self.num_de += 1
+                        self.de.append([i, j])
 
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
@@ -175,7 +182,7 @@ class GUI:
                 self.grid[i][j].left = int(s[j*5+3])
         self.canvas.delete(tk.ALL)
         self.deadEndCount()
-        self.noDE.set(noDEString + str(self.num_de))
+        self.noDE.set(noDEString + str(len(self.de)))
         self.noPath.set(noPathString)
         self.shortestPath.set(shortestPathString)
         self.drawGrid()
@@ -183,7 +190,7 @@ class GUI:
     def gridControl(self):
         self.canvas.delete(tk.ALL)
         if self.solutioncon == 1:
-            self.drawSolution()
+            self.drawSolution(1)
         if self.gridcon == 1:
             self.gridcon = 0
         else:
@@ -201,3 +208,14 @@ class GUI:
         if self.gridcon == 1:
             self.drawGrid()
 
+    def visualizeDeadend(self):
+        self.decontrol = 1 - self.decontrol
+        if self.decontrol == 1:
+            for i in range(len(self.de)):
+                r = self.de[i][0]
+                c = self.de[i][1]
+                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='red', outline='red')
+            self.drawGrid()
+        else:
+            self.canvas.delete(tk.ALL)
+            self.drawGrid()
