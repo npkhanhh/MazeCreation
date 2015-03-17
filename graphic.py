@@ -55,6 +55,7 @@ class GUI:
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
 
+        self.canvas.bind("<Button-1>", self.removeWall)
         self.canvas.grid(row=0, column=0, rowspan=25)
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
@@ -80,6 +81,7 @@ class GUI:
         self.num_de = 0
         self.no_path = 0
         self.shortestPathLength = sys.maxint
+        self.de = []
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
         elif algo == 'Kruskal':
@@ -129,7 +131,15 @@ class GUI:
             for j in range(len(path)):
                 r = path[j][0]
                 c = path[j][1]
-                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='green', outline=outColor)
+                if i == 0:
+                    self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#00ff00', outline='#00ff00')
+                elif i == 1:
+                    self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#ff8000', outline='#ff8000')
+                elif i == 2:
+                    self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#0080ff', outline='#0080ff')
+                else:
+                    self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#e7ff00', outline='#e7ff00')
+
     #function to help with debugging
     def printGrid(self):
         for i in range(self.size):
@@ -145,12 +155,15 @@ class GUI:
         self.master.mainloop()
 
     def deadEndCount(self):
+        t = 0
         for i in range(self.size):
             for j in range(self.size):
                 temp = self.grid[i][j]
                 if temp.top + temp.right + temp.bottom + temp.left == 3:
                     if (i!=0 or j!=0) and (i!=self.size-1 or j!=self.size-1):
+                        t += 1
                         self.de.append([i, j])
+
 
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
@@ -203,7 +216,7 @@ class GUI:
         if self.solutioncon == 1:
             self.solutioncon = 0
         else:
-            self.drawSolution()
+            self.drawSolution(1)
             self.solutioncon = 1
         if self.gridcon == 1:
             self.drawGrid()
@@ -219,3 +232,40 @@ class GUI:
         else:
             self.canvas.delete(tk.ALL)
             self.drawGrid()
+
+    def removeWall(self, event):
+        x = event.x - 10
+        y = event.y - 10
+        r = y / self.cellHeight
+        c = x / self.cellWidth
+        if abs(self.cellWidth*c-x) < abs(self.cellWidth*(c+1)-x):
+            minx = abs(self.cellWidth*c-x)
+            posx = 3
+        else:
+            minx = abs(self.cellWidth*(c+1)-x)
+            posx = 1
+        if abs(self.cellHeight*r-y) < abs(self.cellHeight*(r+1)-y):
+            miny = abs(self.cellHeight*r-y)
+            posy = 0
+        else:
+            miny = abs(self.cellHeight*(r+1)-y)
+            posy = 2
+        if minx<miny:
+            pos = posx
+        else:
+            pos = posy
+        print pos, r, c
+        if r > 0 and pos == 0:
+            self.grid[r][c].top = 0
+            self.grid[r-1][c].bottom = 0
+        elif c < self.size - 1  and pos == 1:
+            self.grid[r][c].right = 0
+            self.grid[r][c+1].left = 0
+        elif r<self.size-1 and pos == 2:
+            self.grid[r][c].bottom = 0
+            self.grid[r+1][c].top = 0
+        elif c<self.size-1 and pos == 3:
+            self.grid[r][c].left = 0
+            self.grid[r][c-1].right = 0
+        self.canvas.delete(tk.ALL)
+        self.drawGrid()
