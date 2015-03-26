@@ -1,5 +1,8 @@
 __author__ = 'Khanh'
-import Tkinter as tk
+try:
+    import Tkinter as tk
+except ImportError:
+    import tkinter as tk
 import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
@@ -27,7 +30,7 @@ class GUI:
         self.de = []
         self.decontrol = 0
         self.no_path = 0
-        self.shortestPathLength = sys.maxint
+        self.shortestPathLength = self.size*self.size+1
         self.algoName = tk.StringVar()
         self.algoName.set('Recursive Backtracker')
         self.noPath = tk.StringVar()
@@ -56,6 +59,7 @@ class GUI:
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
 
         self.canvas.bind("<Button-1>", self.removeWall)
+        self.canvas.bind("<Button-3>", self.addWall)
         self.canvas.grid(row=0, column=0, rowspan=25)
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
@@ -80,7 +84,7 @@ class GUI:
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         self.num_de = 0
         self.no_path = 0
-        self.shortestPathLength = sys.maxint
+        self.shortestPathLength = self.size*self.size+1
         self.de = []
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
@@ -149,7 +153,7 @@ class GUI:
                 sys.stdout.write(str(self.grid[i][j].bottom))
                 sys.stdout.write(str(self.grid[i][j].left))
                 sys.stdout.write(" ")
-            print
+            print("")
 
     def run(self):
         self.master.mainloop()
@@ -254,7 +258,7 @@ class GUI:
             pos = posx
         else:
             pos = posy
-        print pos, r, c
+        print(pos, r, c)
         if r > 0 and pos == 0:
             self.grid[r][c].top = 0
             self.grid[r-1][c].bottom = 0
@@ -268,4 +272,43 @@ class GUI:
             self.grid[r][c].left = 0
             self.grid[r][c-1].right = 0
         self.canvas.delete(tk.ALL)
+        self.deadEndCount()
+        self.drawGrid()
+
+    def addWall(self, event):
+        x = event.x - 10
+        y = event.y - 10
+        r = y / self.cellHeight
+        c = x / self.cellWidth
+        if abs(self.cellWidth*c-x) < abs(self.cellWidth*(c+1)-x):
+            minx = abs(self.cellWidth*c-x)
+            posx = 3
+        else:
+            minx = abs(self.cellWidth*(c+1)-x)
+            posx = 1
+        if abs(self.cellHeight*r-y) < abs(self.cellHeight*(r+1)-y):
+            miny = abs(self.cellHeight*r-y)
+            posy = 0
+        else:
+            miny = abs(self.cellHeight*(r+1)-y)
+            posy = 2
+        if minx<miny:
+            pos = posx
+        else:
+            pos = posy
+        print(pos, r, c)
+        if r > 0 and pos == 0:
+            self.grid[r][c].top = 1
+            self.grid[r-1][c].bottom = 1
+        elif c < self.size - 1  and pos == 1:
+            self.grid[r][c].right = 1
+            self.grid[r][c+1].left = 1
+        elif r<self.size-1 and pos == 2:
+            self.grid[r][c].bottom = 1
+            self.grid[r+1][c].top = 1
+        elif c<self.size-1 and pos == 3:
+            self.grid[r][c].left = 1
+            self.grid[r][c-1].right = 1
+        self.canvas.delete(tk.ALL)
+        self.deadEndCount()
         self.drawGrid()
