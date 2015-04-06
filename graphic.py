@@ -30,6 +30,7 @@ class GUI:
         self.de = []
         self.decontrol = 0
         self.no_path = 0
+        self.path_list=[]
         self.shortestPathLength = self.size*self.size+1
         self.algoName = tk.StringVar()
         self.algoName.set('Recursive Backtracker')
@@ -58,8 +59,8 @@ class GUI:
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
 
-        self.canvas.bind("<Button-1>", self.removeWall)
-        self.canvas.bind("<Button-3>", self.addWall)
+        self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
+        self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
         self.canvas.grid(row=0, column=0, rowspan=25)
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
@@ -82,19 +83,11 @@ class GUI:
         self.cellWidth = (self.w - 20)/self.size
         self.cellHeight = (self.h - 20)/self.size
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
-        self.num_de = 0
-        self.no_path = 0
-        self.shortestPathLength = self.size*self.size+1
-        self.de = []
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
         elif algo == 'Kruskal':
             self.grid = ca.kruskal(self.grid, self.size)
-        self.canvas.delete(tk.ALL)
-        self.deadEndCount()
-        self.noDE.set(noDEString + str(len(self.de)))
-        self.noPath.set(noPathString)
-        self.shortestPath.set(shortestPathString)
+        self.resetGrid()
         self.drawGrid()
 
     def solveMaze(self):
@@ -169,6 +162,20 @@ class GUI:
                         self.de.append([i, j])
 
 
+    def resetGrid(self):
+        self.decontrol = 0
+        self.no_path = 0
+        self.shortestPathLength = self.size*self.size+1
+        self.de = []
+        self.canvas.delete(tk.ALL)
+        self.deadEndCount()
+        self.path_list=[]
+        self.noDE.set(noDEString + str(len(self.de)))
+        self.noPath.set(noPathString)
+        self.shortestPath.set(shortestPathString)
+        self.gridcon = 1
+        self.solutioncon = 1
+
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
         f = open(fileName, 'w')
@@ -197,11 +204,7 @@ class GUI:
                 self.grid[i][j].right = int(s[j*5+1])
                 self.grid[i][j].bottom = int(s[j*5+2])
                 self.grid[i][j].left = int(s[j*5+3])
-        self.canvas.delete(tk.ALL)
-        self.deadEndCount()
-        self.noDE.set(noDEString + str(len(self.de)))
-        self.noPath.set(noPathString)
-        self.shortestPath.set(shortestPathString)
+        self.resetGrid()
         self.drawGrid()
 
     def gridControl(self):
@@ -237,7 +240,7 @@ class GUI:
             self.canvas.delete(tk.ALL)
             self.drawGrid()
 
-    def removeWall(self, event):
+    def editWall(self, event, mode):
         x = event.x - 10
         y = event.y - 10
         r = y / self.cellHeight
@@ -259,56 +262,22 @@ class GUI:
         else:
             pos = posy
         print(pos, r, c)
+        if mode == "remove":
+            action = 0
+        else:
+            action = 1
         if r > 0 and pos == 0:
-            self.grid[r][c].top = 0
-            self.grid[r-1][c].bottom = 0
+            self.grid[r][c].top = action
+            self.grid[r-1][c].bottom = action
         elif c < self.size - 1  and pos == 1:
-            self.grid[r][c].right = 0
-            self.grid[r][c+1].left = 0
+            self.grid[r][c].right = action
+            self.grid[r][c+1].left = action
         elif r<self.size-1 and pos == 2:
-            self.grid[r][c].bottom = 0
-            self.grid[r+1][c].top = 0
+            self.grid[r][c].bottom = action
+            self.grid[r+1][c].top = action
         elif c<self.size-1 and pos == 3:
-            self.grid[r][c].left = 0
-            self.grid[r][c-1].right = 0
-        self.canvas.delete(tk.ALL)
-        self.deadEndCount()
+            self.grid[r][c].left = action
+            self.grid[r][c-1].right = action
+        self.resetGrid()
         self.drawGrid()
 
-    def addWall(self, event):
-        x = event.x - 10
-        y = event.y - 10
-        r = y / self.cellHeight
-        c = x / self.cellWidth
-        if abs(self.cellWidth*c-x) < abs(self.cellWidth*(c+1)-x):
-            minx = abs(self.cellWidth*c-x)
-            posx = 3
-        else:
-            minx = abs(self.cellWidth*(c+1)-x)
-            posx = 1
-        if abs(self.cellHeight*r-y) < abs(self.cellHeight*(r+1)-y):
-            miny = abs(self.cellHeight*r-y)
-            posy = 0
-        else:
-            miny = abs(self.cellHeight*(r+1)-y)
-            posy = 2
-        if minx<miny:
-            pos = posx
-        else:
-            pos = posy
-        print(pos, r, c)
-        if r > 0 and pos == 0:
-            self.grid[r][c].top = 1
-            self.grid[r-1][c].bottom = 1
-        elif c < self.size - 1  and pos == 1:
-            self.grid[r][c].right = 1
-            self.grid[r][c+1].left = 1
-        elif r<self.size-1 and pos == 2:
-            self.grid[r][c].bottom = 1
-            self.grid[r+1][c].top = 1
-        elif c<self.size-1 and pos == 3:
-            self.grid[r][c].left = 1
-            self.grid[r][c-1].right = 1
-        self.canvas.delete(tk.ALL)
-        self.deadEndCount()
-        self.drawGrid()
