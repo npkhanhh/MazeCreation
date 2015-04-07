@@ -43,6 +43,7 @@ class GUI:
         self.choices = ['Recursive Backtracker', 'Kruskal']
         self.gridcon = 1
         self.solutioncon = 1
+        self.zoneControl = 0
 
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
@@ -55,13 +56,14 @@ class GUI:
         self.gridButton = tk.Button(self.master, text="Grid", command=self.gridControl)
         self.solutionButton = tk.Button(self.master, text="Solution", command=self.solutionControl)
         self.deadEndButton = tk.Button(self.master, text="Deadend", command=self.visualizeDeadend)
+        self.divideButton = tk.Button(self.master, text="Divide", command=self.divideZone)
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
 
         self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
         self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
-        self.canvas.grid(row=0, column=0, rowspan=25)
+        self.canvas.grid(row=0, column=0, rowspan=30)
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
         self.shortestPathText.grid(row=2, column=1)
@@ -75,6 +77,7 @@ class GUI:
         self.gridButton.grid(row=9, column=1)
         self.solutionButton.grid(row=10, column=1)
         self.deadEndButton.grid(row=11, column=1)
+        self.divideButton.grid(row=12, column=1)
 
 
     def createMaze(self):
@@ -175,6 +178,7 @@ class GUI:
         self.shortestPath.set(shortestPathString)
         self.gridcon = 1
         self.solutioncon = 1
+        self.decontrol = 0
 
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
@@ -230,15 +234,26 @@ class GUI:
 
     def visualizeDeadend(self):
         self.decontrol = 1 - self.decontrol
+        self.canvas.delete(tk.ALL)
         if self.decontrol == 1:
             for i in range(len(self.de)):
                 r = self.de[i][0]
                 c = self.de[i][1]
                 self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='red', outline='red')
-            self.drawGrid()
-        else:
-            self.canvas.delete(tk.ALL)
-            self.drawGrid()
+        self.drawGrid()
+
+    def divideZone(self):
+        self.zoneControl = 1 - self.zoneControl
+        self.canvas.delete(tk.ALL)
+        if self.zoneControl == 1:
+            for r in range(self.size):
+                for c in range(self.size):
+                    if self.marked[r][c] == 1:
+                        self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#eb3849', outline='#eb3849')
+                    elif self.marked[r][c] == 2:
+                        self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#1e5cdf', outline='#1e5cdf')
+        self.drawGrid()
+
 
     def editWall(self, event, mode):
         x = event.x - 10
@@ -261,7 +276,7 @@ class GUI:
             pos = posx
         else:
             pos = posy
-        print(pos, r, c)
+        #print(pos, r, c)
         if mode == "remove":
             action = 0
         else:
@@ -278,6 +293,9 @@ class GUI:
         elif c<self.size-1 and pos == 3:
             self.grid[r][c].left = action
             self.grid[r][c-1].right = action
+        if mode == "add":
+            self.marked = sa.dfsMarker(self.grid, self.size)
+            print(self.marked)
         self.resetGrid()
         self.drawGrid()
 

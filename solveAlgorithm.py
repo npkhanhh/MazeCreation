@@ -30,3 +30,32 @@ def dfs_recursion(grid, size, path_list, path, r, c, prev):
         path_list = dfs_recursion(grid, size, path_list, path, r, c-1, 1)
         del path[-1]
     return path_list
+
+def dfsMarker(grid, size):
+    marked = [[0 for i in range(size)] for i in range(size)]
+    marker = 1
+    row = 0
+    column = 0
+    marked[row][column] = marker
+    marked = dfsRecursionMarker(grid, size, marked, marker, row, column, 0)
+    marker = 2
+    row = size-1
+    column = size-1
+    marked[row][column] = marker
+    marked = dfsRecursionMarker(grid, size, marked, marker, row, column, 2)
+    return marked
+
+def dfsRecursionMarker(grid, size, marked, marker, r, c, prev):
+    if grid[r][c].top == 0 and prev != 0 and marked[r-1][c] == 0:
+        marked[r-1][c] = marker
+        marked = dfsRecursionMarker(grid, size, marked, marker, r-1, c, 2)
+    if grid[r][c].right == 0 and prev != 1 and marked[r][c+1] == 0:
+        marked[r][c+1] = marker
+        marked = dfsRecursionMarker(grid, size, marked, marker, r, c+1, 3)
+    if grid[r][c].bottom == 0 and prev != 2 and marked[r+1][c] == 0:
+        marked[r+1][c] = marker
+        marked = dfsRecursionMarker(grid, size, marked, marker, r+1, c, 0)
+    if grid[r][c].left == 0 and prev != 3 and marked[r][c-1] == 0:
+        marked[r][c-1] = marker
+        marked = dfsRecursionMarker(grid, size, marked, marker, r, c-1, 1)
+    return marked
