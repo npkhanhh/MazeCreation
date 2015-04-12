@@ -28,9 +28,10 @@ class GUI:
         self.cellWidth = (w - 20)/size
         self.cellHeight = (h - 20)/size
         self.de = []
-        self.decontrol = 0
+
         self.no_path = 0
         self.path_list=[]
+        self.marked=[]
         self.shortestPathLength = self.size*self.size+1
         self.algoName = tk.StringVar()
         self.algoName.set('Recursive Backtracker')
@@ -41,22 +42,32 @@ class GUI:
         self.shortestPath = tk.StringVar()
         self.shortestPath.set(shortestPathString)
         self.choices = ['Recursive Backtracker', 'Kruskal']
-        self.gridcon = 1
-        self.solutioncon = 1
-        self.zoneControl = 0
+
+        self.gridFlag = tk.IntVar()
+        self.gridFlag.set(1)
+        self.solutionFlag = tk.IntVar()
+        self.solutionFlag.set(1)
+        self.deFlag = tk.IntVar()
+        self.deFlag.set(0)
+        self.zoneFlag = tk.IntVar()
+        self.zoneFlag.set(0)
 
     def createWindow(self):
         self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
         self.menu = tk.OptionMenu(self.master, self.algoName, *self.choices)
         self.sizeEntry = tk.Entry(self.master)
+
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
         self.saveButton = tk.Button(self.master, text="Save", command=self.saveGrid)
         self.loadButton = tk.Button(self.master, text="Load", command=self.loadGrid)
-        self.gridButton = tk.Button(self.master, text="Grid", command=self.gridControl)
-        self.solutionButton = tk.Button(self.master, text="Solution", command=self.solutionControl)
-        self.deadEndButton = tk.Button(self.master, text="Deadend", command=self.visualizeDeadend)
-        self.divideButton = tk.Button(self.master, text="Divide", command=self.divideZone)
+        self.divideZoneButton = tk.Button(self.master, text="Divide", command=self.divide)
+
+        self.gridButton = tk.Checkbutton(self.master, text="Grid", variable=self.gridFlag, command=self.draw)
+        self.solutionButton = tk.Checkbutton(self.master, text="Solution", variable=self.solutionFlag, command=self.draw)
+        self.deadEndButton = tk.Checkbutton(self.master, text="Deadend", variable=self.deFlag, command=self.draw)
+        self.zoneButton = tk.Checkbutton(self.master, text="Zone", variable=self.zoneFlag, command=self.draw)
+
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
@@ -72,12 +83,15 @@ class GUI:
         self.createButton.grid(row=4, column=1)
         self.menu.grid(row=5, column=1)
         self.solveButton.grid(row=6, column=1)
-        self.saveButton.grid(row=7, column=1)
-        self.loadButton.grid(row=8, column=1)
-        self.gridButton.grid(row=9, column=1)
-        self.solutionButton.grid(row=10, column=1)
-        self.deadEndButton.grid(row=11, column=1)
-        self.divideButton.grid(row=12, column=1)
+        self.divideZoneButton.grid(row=7, column=1)
+
+        self.saveButton.grid(row=8, column=1)
+        self.loadButton.grid(row=9, column=1)
+
+        self.gridButton.grid(row=10, column=1)
+        self.solutionButton.grid(row=11, column=1)
+        self.deadEndButton.grid(row=12, column=1)
+        self.zoneButton.grid(row=13, column=1)
 
 
     def createMaze(self):
@@ -91,12 +105,11 @@ class GUI:
         elif algo == 'Kruskal':
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
-        self.drawGrid()
+        self.draw()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
-        self.drawSolution(0)
-        self.drawGrid()
+        self.draw()
         self.no_path = len(self.path_list)
         for i in range(len(self.path_list)):
             if len(self.path_list[i]) < self.shortestPathLength  :
@@ -107,6 +120,18 @@ class GUI:
         else:
              self.shortestPath.set(shortestPathString)
         #print self.path_list
+
+    def draw(self):
+        self.canvas.delete(tk.ALL)
+        if self.zoneFlag.get() == 1:
+            self.drawZone()
+        if self.deFlag.get() == 1:
+            self.drawDeadend()
+        if self.solutionFlag.get() == 1:
+            self.drawSolution(1)
+        if self.gridFlag.get() == 1:
+            self.drawGrid()
+
 
     def drawGrid(self):
         for r in range(self.size):
@@ -125,7 +150,7 @@ class GUI:
         #    outColor = 'green'
         #else:
         #    outColor = 'black'
-        outColor = 'green'
+        #outColor = 'green'
         for i in range(len(self.path_list)):
             path = self.path_list[i]
             for j in range(len(path)):
@@ -139,6 +164,10 @@ class GUI:
                     self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#0080ff', outline='#0080ff')
                 else:
                     self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#e7ff00', outline='#e7ff00')
+
+    def divide(self):
+        self.marked = sa.dfsMarker(self.grid, self.size)
+        self.draw()
 
     #function to help with debugging
     def printGrid(self):
@@ -166,7 +195,6 @@ class GUI:
 
 
     def resetGrid(self):
-        self.decontrol = 0
         self.no_path = 0
         self.shortestPathLength = self.size*self.size+1
         self.de = []
@@ -176,9 +204,6 @@ class GUI:
         self.noDE.set(noDEString + str(len(self.de)))
         self.noPath.set(noPathString)
         self.shortestPath.set(shortestPathString)
-        self.gridcon = 1
-        self.solutioncon = 1
-        self.decontrol = 0
 
     def saveGrid(self):
         fileName = raw_input("Input file name to save: ")
@@ -209,57 +234,29 @@ class GUI:
                 self.grid[i][j].bottom = int(s[j*5+2])
                 self.grid[i][j].left = int(s[j*5+3])
         self.resetGrid()
-        self.drawGrid()
+        self.draw()
 
-    def gridControl(self):
-        self.canvas.delete(tk.ALL)
-        if self.solutioncon == 1:
-            self.drawSolution(1)
-        if self.gridcon == 1:
-            self.gridcon = 0
-        else:
-            self.drawGrid()
-            self.gridcon = 1
+    def drawDeadend(self):
+        for i in range(len(self.de)):
+            r = self.de[i][0]
+            c = self.de[i][1]
+            self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='red', outline='red')
 
-
-    def solutionControl(self):
-        self.canvas.delete(tk.ALL)
-        if self.solutioncon == 1:
-            self.solutioncon = 0
-        else:
-            self.drawSolution(1)
-            self.solutioncon = 1
-        if self.gridcon == 1:
-            self.drawGrid()
-
-    def visualizeDeadend(self):
-        self.decontrol = 1 - self.decontrol
-        self.canvas.delete(tk.ALL)
-        if self.decontrol == 1:
-            for i in range(len(self.de)):
-                r = self.de[i][0]
-                c = self.de[i][1]
-                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='red', outline='red')
-        self.drawGrid()
-
-    def divideZone(self):
-        self.zoneControl = 1 - self.zoneControl
-        self.canvas.delete(tk.ALL)
-        if self.zoneControl == 1:
+    def drawZone(self):
+        if(self.marked != []):
             for r in range(self.size):
                 for c in range(self.size):
                     if self.marked[r][c] == 1:
                         self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#eb3849', outline='#eb3849')
                     elif self.marked[r][c] == 2:
                         self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#1e5cdf', outline='#1e5cdf')
-        self.drawGrid()
 
 
     def editWall(self, event, mode):
         x = event.x - 10
         y = event.y - 10
-        r = y / self.cellHeight
-        c = x / self.cellWidth
+        r = int(y / self.cellHeight)
+        c = int(x / self.cellWidth)
         if abs(self.cellWidth*c-x) < abs(self.cellWidth*(c+1)-x):
             minx = abs(self.cellWidth*c-x)
             posx = 3
@@ -293,9 +290,6 @@ class GUI:
         elif c<self.size-1 and pos == 3:
             self.grid[r][c].left = action
             self.grid[r][c-1].right = action
-        if mode == "add":
-            self.marked = sa.dfsMarker(self.grid, self.size)
-            print(self.marked)
         self.resetGrid()
-        self.drawGrid()
+        self.draw()
 

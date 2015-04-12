@@ -41,7 +41,8 @@ def dfsMarker(grid, size):
     marker = 2
     row = size-1
     column = size-1
-    marked[row][column] = marker
+    if marked[row][column] == 0:
+        marked[row][column] = marker
     marked = dfsRecursionMarker(grid, size, marked, marker, row, column, 2)
     return marked
 
