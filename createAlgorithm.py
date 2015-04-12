@@ -16,7 +16,7 @@ def carvePath(r, c, grid, visited, size):
     random.shuffle(dir)
     for i in range(len(dir)):
         if dir[i] == 0:
-            if r > 0 and visited[r - 1][c] == 0:
+            if r > 0 and visited[r-1][c] == 0:
                 grid[r][c].top = 0
                 grid[r-1][c].bottom = 0
                 grid = carvePath(r-1, c, grid, visited, size)
@@ -36,6 +36,55 @@ def carvePath(r, c, grid, visited, size):
                 grid[r][c-1].right = 0
                 grid = carvePath(r, c-1, grid, visited, size)
     return grid
+
+###################################### Backtracker algorithm ##############################################
+
+def backtracker(grid, size):
+    visited = [[0 for i in range(size)] for j in range(size)]
+    r = random.randint(0, size-1)
+    c = random.randint(0, size-1)
+    dir = [0, 1, 2, 3]
+    pathstack = [[r,c]]
+    visited[r][c] = 1
+    while(pathstack):
+        cell = pathstack[-1]
+        r = cell[0]
+        c = cell[1]
+        if (r==0 or visited[r-1][c]==1) and (c==size-1 or visited[r][c+1]==1) and (r==size-1 or visited[r+1][c]==1) and (c==0 or visited[r][c-1]==1):
+            pathstack.pop(-1)
+        else:
+            random.shuffle(dir)
+            for i in range(len(dir)):
+                if dir[i] == 0:
+                    if r > 0 and visited[r-1][c] == 0:
+                        grid[r][c].top = 0
+                        grid[r-1][c].bottom = 0
+                        visited[r - 1][c] = 1
+                        pathstack.append([r-1, c])
+                        break
+                if dir[i] == 1:
+                    if c < size-1 and visited[r][c+1] == 0:
+                        grid[r][c].right = 0
+                        grid[r][c+1].left = 0
+                        visited[r][c+1] = 1
+                        pathstack.append([r, c+1])
+                        break
+                if dir[i] == 2:
+                    if r < size-1 and visited[r+1][c] == 0:
+                        grid[r][c].bottom = 0
+                        grid[r+1][c].top = 0
+                        visited[r+1][c] = 1
+                        pathstack.append([r+1, c])
+                        break
+                if dir[i] == 3:
+                    if c > 0 and visited[r][c-1] == 0:
+                        grid[r][c].left = 0
+                        grid[r][c-1].right = 0
+                        visited[r][c-1] = 1
+                        pathstack.append([r, c-1])
+                        break
+    return grid
+
 
 ###################################### Kruskal algorithm ##############################################
 

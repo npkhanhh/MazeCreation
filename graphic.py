@@ -34,14 +34,14 @@ class GUI:
         self.marked=[]
         self.shortestPathLength = self.size*self.size+1
         self.algoName = tk.StringVar()
-        self.algoName.set('Recursive Backtracker')
+        self.algoName.set('Backtracker')
         self.noPath = tk.StringVar()
         self.noPath.set(noPathString)
         self.noDE = tk.StringVar()
         self.noDE.set(noDEString)
         self.shortestPath = tk.StringVar()
         self.shortestPath.set(shortestPathString)
-        self.choices = ['Recursive Backtracker', 'Kruskal']
+        self.choices = ['Backtracker', 'Recursive Backtracker', 'Kruskal']
 
         self.gridFlag = tk.IntVar()
         self.gridFlag.set(1)
@@ -102,6 +102,8 @@ class GUI:
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
+        elif algo == 'Backtracker':
+            self.grid = ca.backtracker(self.grid, self.size)
         elif algo == 'Kruskal':
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
@@ -292,4 +294,3 @@ class GUI:
             self.grid[r][c-1].right = action
         self.resetGrid()
         self.draw()
-
