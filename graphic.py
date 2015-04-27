@@ -11,6 +11,7 @@ import sys
 noPathString = 'Number of paths: '
 noDEString = 'Number of deadends: '
 shortestPathString = 'Shortest path length: '
+minCellsize = 16
 
 class Cell:
     def __init__(self):
@@ -53,7 +54,12 @@ class GUI:
         self.zoneFlag.set(0)
 
     def createWindow(self):
-        self.canvas = tk.Canvas(self.master, width=self.w, height=self.h)
+        self.frame = tk.Frame(self.master, width = self.w, height=self.h)
+
+        self.xscrollbar = tk.Scrollbar(self.frame, orient=tk.HORIZONTAL)
+        self.yscrollbar = tk.Scrollbar(self.frame)
+        self.canvas = tk.Canvas(self.frame, width=self.w, height=self.h, xscrollcommand=self.xscrollbar.set, yscrollcommand=self.yscrollbar.set)
+
         self.menu = tk.OptionMenu(self.master, self.algoName, *self.choices)
         self.sizeEntry = tk.Entry(self.master)
 
@@ -74,7 +80,14 @@ class GUI:
 
         self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
         self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
-        self.canvas.grid(row=0, column=0, rowspan=30)
+        self.xscrollbar.grid(row=1, column=0, sticky=tk.E+tk.W)
+        self.yscrollbar.grid(row=0, column=1, sticky=tk.N+tk.S)
+        self.canvas.grid(row=0, column=0, sticky=tk.NW)
+
+        self.xscrollbar.config(command=self.canvas.xview)
+        self.yscrollbar.config(command=self.canvas.yview)
+
+        self.frame.grid(row=0, column=0, rowspan=30)
         self.deadEndText.grid(row=0, column=1)
         self.pathText.grid(row=1, column=1)
         self.shortestPathText.grid(row=2, column=1)
@@ -96,9 +109,16 @@ class GUI:
 
     def createMaze(self):
         algo = self.algoName.get()
+        self.canvas.config(scrollregion=(0, 0, 0, 0))
         self.size = int(self.sizeEntry.get())
         self.cellWidth = (self.w - 20)/self.size
+        if self.cellWidth < minCellsize:
+            self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
+            self.cellWidth = minCellsize
         self.cellHeight = (self.h - 20)/self.size
+        if self.cellHeight < minCellsize:
+            self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
+            self.cellHeight = minCellsize
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
