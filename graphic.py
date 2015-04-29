@@ -140,7 +140,7 @@ class GUI:
         if self.no_path != 0:
             self.shortestPath.set(shortestPathString + str(self.shortestPathLength))
         else:
-             self.shortestPath.set(shortestPathString)
+            self.shortestPath.set(shortestPathString)
         #print self.path_list
 
     def draw(self):
