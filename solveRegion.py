@@ -103,38 +103,47 @@ def sovleRegion(grid, top, left, right, bottom, size):
 	#marked = [[0 for i in range(size)] for i in range(size)]	# used to track whether the cell is already traversed
 	for c in  range(left, right):
 		for r in range(top, bottom):
-			entranceList = []	# list of entrance of this cell
-			if hasEntrance(grid, top, left, right, bottom, r, c, entranceList):	# check if there is entrance to the left of this cell
-				for i in range(len(entranceList)):
-					if entranceList[i] != 'right' and c + 1 < right:
-						foundEntrances = []	# list of entrances found by findPath method 
-						foundEntrances = findPath(grid, top, left, right, bottom, r, c + 1, 'right')
-						if np.shape(foundEntrances)[0] > 0:
-							if np.shape(foundEntrances[0])[0] != 0:
-								for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
-									entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
-					if entranceList[i] != 'bottom' and r + 1 < bottom:
-						foundEntrances = []	# list of entrances found by findPath method 
-						foundEntrances = findPath(grid, top, left, right, bottom, r + 1, c, 'bottom')
-						if np.shape(foundEntrances)[0] > 0:
-							if np.shape(foundEntrances[0])[0] != 0:
-								for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
-									entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
-					if entranceList[i] != 'left' and c - 1 >= left:
-						foundEntrances = []	# list of entrances found by findPath method 
-						foundEntrances = findPath(grid, top, left, right, bottom, r, c - 1, 'left')
-						if np.shape(foundEntrances)[0] > 0:
-							if np.shape(foundEntrances[0])[0] != 0:
-								for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
-									entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
-					if entranceList[i] != 'top' and r - 1 >= top:
-						foundEntrances = []	# list of entrances found by findPath method 
-						foundEntrances = findPath(grid, top, left, right, bottom, r - 1, c, 'top')
-						if np.shape(foundEntrances)[0] > 0:
-							if np.shape(foundEntrances[0])[0] != 0:
-								for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
-									entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
+			if (c == left or c == right - 1) and (r == top or r == bottom - 1):	# Only examine cells at the boundary
+				entranceList = []	# list of entrance of this cell
+				if hasEntrance(grid, top, left, right, bottom, r, c, entranceList):	# check if there is entrance to the left of this cell
+					for i in range(len(entranceList)):
+						if entranceList[i] != 'right' and c + 1 < right and grid[r][c].right == 0:
+							foundEntrances = []	# list of entrances found by findPath method 
+							foundEntrances = findPath(grid, top, left, right, bottom, r, c + 1, 'right')
+							if np.shape(foundEntrances)[0] > 0:
+								if np.shape(foundEntrances[0])[0] != 0:
+									for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
+										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
+						if entranceList[i] != 'bottom' and r + 1 < bottom and grid[r][c].bottom == 0:
+							foundEntrances = []	# list of entrances found by findPath method 
+							foundEntrances = findPath(grid, top, left, right, bottom, r + 1, c, 'bottom')
+							if np.shape(foundEntrances)[0] > 0:
+								if np.shape(foundEntrances[0])[0] != 0:
+									for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
+										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
+						if entranceList[i] != 'left' and c - 1 >= left and grid[r][c].left == 0:
+							foundEntrances = []	# list of entrances found by findPath method 
+							foundEntrances = findPath(grid, top, left, right, bottom, r, c - 1, 'left')
+							if np.shape(foundEntrances)[0] > 0:
+								if np.shape(foundEntrances[0])[0] != 0:
+									for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
+										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
+						if entranceList[i] != 'top' and r - 1 >= top and grid[r][c].top == 0:
+							foundEntrances = []	# list of entrances found by findPath method 
+							foundEntrances = findPath(grid, top, left, right, bottom, r - 1, c, 'top')
+							if np.shape(foundEntrances)[0] > 0:
+								if np.shape(foundEntrances[0])[0] != 0:
+									for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
+										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
 	
+	# Remove redundant cells
+	for i in range(len(entrancePairList)):
+		for i2 in range(len(entrancePairList)):
+			if i2 != i:
+				if	(entrancePairList[i][0] == entrancePairList[i2][1] and entrancePairList[i][1] == entrancePairList[i2][0]) or \
+					(entrancePairList[i][0] == entrancePairList[i2][0] and entrancePairList[i][1] == entrancePairList[i2][1]): 
+						entrancePairList.pop(i2)
+
 	return entrancePairList
 
 
