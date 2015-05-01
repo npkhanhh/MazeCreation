@@ -136,7 +136,7 @@ def sovleRegion(grid, top, left, right, bottom, size):
 									for j in range(np.shape(foundEntrances)[0]):	# add pairs to entrancePairList
 										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
 	
-	# Remove redundant cells
+	# Remove duplicate cells
 	for i in range(len(entrancePairList)):
 		for i2 in range(len(entrancePairList)):
 			if i2 != i:
