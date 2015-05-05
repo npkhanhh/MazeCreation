@@ -103,7 +103,7 @@ def sovleRegion(grid, top, left, right, bottom, size):
 	#marked = [[0 for i in range(size)] for i in range(size)]	# used to track whether the cell is already traversed
 	for c in  range(left, right):
 		for r in range(top, bottom):
-			if (c == left or c == right - 1) and (r == top or r == bottom - 1):	# Only examine cells at the boundary
+			if (c == left or c == right - 1) or (r == top or r == bottom - 1):	# Only examine cells at the boundary
 				entranceList = []	# list of entrance of this cell
 				if hasEntrance(grid, top, left, right, bottom, r, c, entranceList):	# check if there is entrance to the left of this cell
 					for i in range(len(entranceList)):
@@ -137,13 +137,18 @@ def sovleRegion(grid, top, left, right, bottom, size):
 										entrancePairList.append([[r, c], [foundEntrances[j][0], foundEntrances[j][1]]])
 	
 	# Remove duplicate cells
-	for i in range(len(entrancePairList)):
-		for i2 in range(len(entrancePairList)):
+	listSize = len(entrancePairList)
+	for i in range(listSize):
+		for i2 in range(listSize):
 			if i2 != i:
 				if	(entrancePairList[i][0] == entrancePairList[i2][1] and entrancePairList[i][1] == entrancePairList[i2][0]) or \
 					(entrancePairList[i][0] == entrancePairList[i2][0] and entrancePairList[i][1] == entrancePairList[i2][1]): 
 						entrancePairList.pop(i2)
-
+						listSize = len(entrancePairList)
+						if i2 == listSize - 1:
+							break
+		if i == listSize - 1:
+			return entrancePairList
 	return entrancePairList
 
 
