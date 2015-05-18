@@ -12,7 +12,7 @@ grid = [[]]
 
 #     +  ------+
 #     |     |  |
-#     |__|__   |
+#     |__|__   
 #     |__    __|
 #     +--------+
 def createMaze1():
@@ -33,6 +33,7 @@ def createMaze1():
     grid[1][2].left = 0
     grid[1][2].bottom = 0
     grid[1][2].top = 0
+    grid[1][2].right = 0
     
     grid[2][0].right = 0
     grid[2][1].left = 0
