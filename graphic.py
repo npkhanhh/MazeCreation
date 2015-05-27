@@ -6,6 +6,9 @@ except ImportError:
 import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
+import numpy as np
+from RegionSolver import RegionSolver
+import threading
 
 #### Some global variables
 noPathString = 'Number of paths: '
@@ -106,6 +109,24 @@ class GUI:
         self.deadEndButton.grid(row=12, column=1)
         self.zoneButton.grid(row=13, column=1)
 
+    def doHuysStuff(self):
+#         print "Maze size: {}".format(self.size)
+        nRegion = 2
+        regionSize = self.size / nRegion
+#         regionMap = np.zeros((nRegion, nRegion))
+        regionMap = [["" for x in range(nRegion)] for y in range(nRegion)]
+        lock = threading.Lock()
+        threads = []
+        for i in range(nRegion):
+            for j in range(nRegion):
+                regSolver = RegionSolver(self.grid, i*regionSize, j*regionSize, (j+1)*regionSize, (i+1)*regionSize, i, j, regionMap, lock)
+                threads.append(regSolver)
+                regSolver.start()
+        
+        for t in threads:
+            t.join()
+            
+        print regionMap
 
     def createMaze(self):
         algo = self.algoName.get()
@@ -128,6 +149,8 @@ class GUI:
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
         self.draw()
+        
+        self.doHuysStuff()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
