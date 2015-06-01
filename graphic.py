@@ -114,7 +114,7 @@ class GUI:
         nRegion = 2
         regionSize = self.size / nRegion
 #         regionMap = np.zeros((nRegion, nRegion))
-        regionMap = [["" for x in range(nRegion)] for y in range(nRegion)]
+        regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         lock = threading.Lock()
         threads = []
         for i in range(nRegion):
@@ -126,7 +126,7 @@ class GUI:
         for t in threads:
             t.join()
             
-        print regionMap
+        print(regionMap)
 
     def createMaze(self):
         algo = self.algoName.get()

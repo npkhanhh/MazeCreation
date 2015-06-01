@@ -133,7 +133,7 @@ class GUI:
         self.size = int(self.sizeEntry.get())
         self.cellWidth = (self.w - 20)/self.size
         if self.cellWidth < minCellsize:
-           #self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
+            #self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
             self.cellWidth = minCellsize
         self.cellHeight = (self.h - 20)/self.size
         if self.cellHeight < minCellsize:
