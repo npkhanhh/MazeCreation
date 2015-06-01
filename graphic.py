@@ -14,7 +14,7 @@ import threading
 noPathString = 'Number of paths: '
 noDEString = 'Number of deadends: '
 shortestPathString = 'Shortest path length: '
-minCellsize = 16
+defaultCellsize = 5
 
 class Cell:
     def __init__(self):
@@ -56,6 +56,9 @@ class GUI:
         self.zoneFlag = tk.IntVar()
         self.zoneFlag.set(0)
 
+        self.zoomString = tk.StringVar()
+        self.zoomString.set('Zoom')
+
     def createWindow(self):
         self.frame = tk.Frame(self.master, width = self.w, height=self.h)
 
@@ -77,9 +80,13 @@ class GUI:
         self.deadEndButton = tk.Checkbutton(self.master, text="Deadend", variable=self.deFlag, command=self.draw)
         self.zoneButton = tk.Checkbutton(self.master, text="Zone", variable=self.zoneFlag, command=self.draw)
 
+        self.zoomInButton = tk.Button(self.master, text="+", command=self.zoomIn)
+        self.zoomOutButton = tk.Button(self.master, text = "-", command=self.zoomOut)
+
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
+        self.zoomText = tk.Label(self.master, textvariable=self.zoomString)
 
         self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
         self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
@@ -91,23 +98,27 @@ class GUI:
         self.yscrollbar.config(command=self.canvas.yview)
 
         self.frame.grid(row=0, column=0, rowspan=30)
-        self.deadEndText.grid(row=0, column=1)
-        self.pathText.grid(row=1, column=1)
-        self.shortestPathText.grid(row=2, column=1)
-        self.sizeEntry.grid(row=3, column=1)
+        self.deadEndText.grid(row=0, column=1, columnspan=3)
+        self.pathText.grid(row=1, column=1, columnspan=3)
+        self.shortestPathText.grid(row=2, column=1, columnspan=3)
+        self.sizeEntry.grid(row=3, column=1, columnspan=3)
         self.sizeEntry.insert(0, str(self.size))
-        self.createButton.grid(row=4, column=1)
-        self.menu.grid(row=5, column=1)
-        self.solveButton.grid(row=6, column=1)
-        self.divideZoneButton.grid(row=7, column=1)
+        self.createButton.grid(row=4, column=1, columnspan=3)
+        self.menu.grid(row=5, column=1, columnspan=3)
+        self.solveButton.grid(row=6, column=1, columnspan=3)
+        self.divideZoneButton.grid(row=7, column=1, columnspan=3)
 
-        self.saveButton.grid(row=8, column=1)
-        self.loadButton.grid(row=9, column=1)
+        self.saveButton.grid(row=8, column=1, columnspan=3)
+        self.loadButton.grid(row=9, column=1, columnspan=3)
 
-        self.gridButton.grid(row=10, column=1)
-        self.solutionButton.grid(row=11, column=1)
-        self.deadEndButton.grid(row=12, column=1)
-        self.zoneButton.grid(row=13, column=1)
+        self.gridButton.grid(row=10, column=1, columnspan=3)
+        self.solutionButton.grid(row=11, column=1, columnspan=3)
+        self.deadEndButton.grid(row=12, column=1, columnspan=3)
+        self.zoneButton.grid(row=13, column=1, columnspan=3)
+
+        self.zoomInButton.grid(row=14, column=1)
+        self.zoomText.grid(row=14, column=2)
+        self.zoomOutButton.grid(row=14, column=3)
 
     def doHuysStuff(self):
 #         print "Maze size: {}".format(self.size)
@@ -133,13 +144,13 @@ class GUI:
         self.canvas.config(scrollregion=(0, 0, 0, 0))
         self.size = int(self.sizeEntry.get())
         self.cellWidth = (self.w - 20)/self.size
-        if self.cellWidth < minCellsize:
-            self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
-            self.cellWidth = minCellsize
+        if self.cellWidth < defaultCellsize:
+            self.canvas.config(scrollregion=(0, 0, defaultCellsize*self.size + 20, defaultCellsize*self.size + 20))
+            self.cellWidth = defaultCellsize
         self.cellHeight = (self.h - 20)/self.size
-        if self.cellHeight < minCellsize:
-            self.canvas.config(scrollregion=(0, 0, minCellsize*self.size + 20, minCellsize*self.size + 20))
-            self.cellHeight = minCellsize
+        if self.cellHeight < defaultCellsize:
+            self.canvas.config(scrollregion=(0, 0, defaultCellsize*self.size + 20, defaultCellsize*self.size + 20))
+            self.cellHeight = defaultCellsize
         self.grid = [[Cell() for i in range(self.size)] for j in range(self.size)]
         if algo == 'Recursive Backtracker':
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
@@ -150,7 +161,7 @@ class GUI:
         self.resetGrid()
         self.draw()
         
-        self.doHuysStuff()
+        #self.doHuysStuff()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
@@ -337,3 +348,17 @@ class GUI:
             self.grid[r][c-1].right = action
         self.resetGrid()
         self.draw()
+
+    def zoomIn(self):
+        self.cellWidth+=1
+        self.cellHeight+=1
+        self.canvas.config(scrollregion=(0, 0, self.cellWidth*self.size + 20, self.cellHeight*self.size + 20))
+        self.draw()
+
+
+    def zoomOut(self):
+        if self.cellWidth > 1 and self.cellHeight > 1:
+            self.cellWidth-=1
+            self.cellHeight-=1
+            self.canvas.config(scrollregion=(0, 0, self.cellWidth*self.size + 20, self.cellHeight*self.size + 20))
+            self.draw()
