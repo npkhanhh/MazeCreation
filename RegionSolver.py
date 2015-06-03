@@ -79,7 +79,6 @@ class RegionSolver(threading.Thread):
             entranceCellList = entranceCellList + path
         
         
-        
         if direction != 'right' and 'left' not in entranceAt and col > left and grid[row][col].left == 0:    # check left cell
             pathNew = list(path)
             pathNew.append([row, col])
@@ -122,11 +121,10 @@ class RegionSolver(threading.Thread):
                 if (c == left or c == right - 1) or (r == top or r == bottom - 1):    # Only examine cells at the boundary
                     entranceAt = []    # list of entrance of this cell
                     if self.hasEntrance(grid, top, left, right, bottom, r, c, entranceAt):
-                        # Check if this cell is at the corner of region and has 2 entrance
                         if  'right' in entranceAt and 'top' in entranceAt or \
                             'right' in entranceAt and 'bottom' in entranceAt or \
                             'left' in entranceAt and 'top' in entranceAt or \
-                            'left' in entranceAt and 'bottom' in entranceAt:
+                            'left' in entranceAt and 'bottom' in entranceAt:    # Check if this cell is at the corner of region and has 2 entrance
                             entrancePairList = entrancePairList + [[[r, c]]]
                         for i in range(len(entranceAt)):
                             if entranceAt[i] != 'right' and c + 1 < right and grid[r][c].right == 0:
