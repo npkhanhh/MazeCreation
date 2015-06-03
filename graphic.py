@@ -7,6 +7,7 @@ import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
 import numpy as np
+import bot as b
 from RegionSolver import RegionSolver
 import threading
 
@@ -56,6 +57,8 @@ class GUI:
         self.zoneFlag = tk.IntVar()
         self.zoneFlag.set(0)
 
+        self.sizeString = tk.StringVar()
+        self.sizeString.set('Size:')
         self.zoomString = tk.StringVar()
         self.zoomString.set('Zoom')
 
@@ -68,6 +71,7 @@ class GUI:
 
         self.menu = tk.OptionMenu(self.master, self.algoName, *self.choices)
         self.sizeEntry = tk.Entry(self.master)
+        self.botEntry = tk.Entry(self.master)
 
         self.createButton = tk.Button(self.master, text="Create", command=self.createMaze)
         self.solveButton = tk.Button(self.master, text="Solve", command=self.solveMaze)
@@ -83,10 +87,13 @@ class GUI:
         self.zoomInButton = tk.Button(self.master, text="+", command=self.zoomIn)
         self.zoomOutButton = tk.Button(self.master, text = "-", command=self.zoomOut)
 
+        self.runButton = tk.Button(self.master, text="Run Bot", command=self.runBot)
+
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
         self.shortestPathText = tk.Label(self.master, textvariable=self.shortestPath)
         self.zoomText = tk.Label(self.master, textvariable=self.zoomString)
+        self.sizeText = tk.Label(self.master, textvariable=self.sizeString)
 
         self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
         self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
@@ -101,7 +108,8 @@ class GUI:
         self.deadEndText.grid(row=0, column=1, columnspan=3)
         self.pathText.grid(row=1, column=1, columnspan=3)
         self.shortestPathText.grid(row=2, column=1, columnspan=3)
-        self.sizeEntry.grid(row=3, column=1, columnspan=3)
+        self.sizeText.grid(row=3, column=1)
+        self.sizeEntry.grid(row=3, column=2, columnspan=2)
         self.sizeEntry.insert(0, str(self.size))
         self.createButton.grid(row=4, column=1, columnspan=3)
         self.menu.grid(row=5, column=1, columnspan=3)
@@ -119,6 +127,10 @@ class GUI:
         self.zoomInButton.grid(row=14, column=1)
         self.zoomText.grid(row=14, column=2)
         self.zoomOutButton.grid(row=14, column=3)
+
+        self.botEntry.grid(row=15, column=1, columnspan=3)
+        self.botEntry.insert(0, '0')
+        self.runButton.grid(row=16, column=1, columnspan=3)
 
     def doHuysStuff(self):
 #         print "Maze size: {}".format(self.size)
@@ -362,3 +374,26 @@ class GUI:
             self.cellHeight-=1
             self.canvas.config(scrollregion=(0, 0, self.cellWidth*self.size + 20, self.cellHeight*self.size + 20))
             self.draw()
+
+    def runBot(self):
+        no_bot = int(self.botEntry.get())
+        bot = b.bot(self.canvas, 12, 12, 12+self.cellWidth-3, 12+self.cellHeight-3, fill='black')
+        r = 0
+        c = 0
+        for i in range(1, len(self.path_list[0])):
+            ce = self.path_list[0][i]
+            r1 = ce[0]
+            c1 = ce[1]
+            if r1 > r:
+                bot.move(0, self.cellHeight)
+            elif r1 < r:
+                bot.move(0, -self.cellHeight)
+            elif c1 > c:
+                bot.move(self.cellWidth, 0)
+            else:
+                bot.move(-self.cellWidth, 0)
+            r = r1
+            c = c1
+            self.master.update()
+            self.master.after(100)
+
