@@ -1,6 +1,6 @@
 __author__ = 'Khanh'
-import graphicgame as gg
 import graphic as g
+
 import sys
 
 if len(sys.argv) == 2:
@@ -13,6 +13,7 @@ canvasHeight = 820
 sys.setrecursionlimit(100000)
 
 gui = g.GUI(canvasWidth, canvasHeight, mazeSize)
+
 gui.createWindow()
 gui.run()
 

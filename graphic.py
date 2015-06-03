@@ -6,7 +6,6 @@ except ImportError:
 import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
-import numpy as np
 import bot as b
 from RegionSolver import RegionSolver
 import threading
@@ -137,7 +136,7 @@ class GUI:
         nRegion = 2
         regionSize = self.size / nRegion
 #         regionMap = np.zeros((nRegion, nRegion))
-        regionMap = [["" for x in range(nRegion)] for y in range(nRegion)]
+        regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         lock = threading.Lock()
         threads = []
         for i in range(nRegion):
@@ -149,7 +148,7 @@ class GUI:
         for t in threads:
             t.join()
             
-        print regionMap
+        print(regionMap)
 
     def createMaze(self):
         algo = self.algoName.get()
@@ -173,7 +172,7 @@ class GUI:
         self.resetGrid()
         self.draw()
         
-        #self.doHuysStuff()
+        self.doHuysStuff()
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
