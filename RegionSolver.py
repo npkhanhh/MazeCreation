@@ -76,7 +76,9 @@ class RegionSolver(threading.Thread):
         entranceAt = []    # list of directions of the entrance of this cell
         if self.hasEntrance(grid, top, left, right, bottom, row, col, entranceAt):
             path.append([row, col])
-            entranceCellList = entranceCellList + (path)
+            entranceCellList = entranceCellList + path
+        
+        
         
         if direction != 'right' and 'left' not in entranceAt and col > left and grid[row][col].left == 0:    # check left cell
             pathNew = list(path)
@@ -118,28 +120,34 @@ class RegionSolver(threading.Thread):
         for c in  range(left, right):
             for r in range(top, bottom):
                 if (c == left or c == right - 1) or (r == top or r == bottom - 1):    # Only examine cells at the boundary
-                    entranceList = []    # list of entrance of this cell
-                    if self.hasEntrance(grid, top, left, right, bottom, r, c, entranceList):    # check if there is entrance to the left of this cell
-                        for i in range(len(entranceList)):
-                            if entranceList[i] != 'right' and c + 1 < right and grid[r][c].right == 0:
+                    entranceAt = []    # list of entrance of this cell
+                    if self.hasEntrance(grid, top, left, right, bottom, r, c, entranceAt):
+                        # Check if this cell is at the corner of region and has 2 entrance
+                        if  'right' in entranceAt and 'top' in entranceAt or \
+                            'right' in entranceAt and 'bottom' in entranceAt or \
+                            'left' in entranceAt and 'top' in entranceAt or \
+                            'left' in entranceAt and 'bottom' in entranceAt:
+                            entrancePairList = entrancePairList + [[[r, c]]]
+                        for i in range(len(entranceAt)):
+                            if entranceAt[i] != 'right' and c + 1 < right and grid[r][c].right == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r, c + 1, 'right', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + [foundEntrances]
-                            if entranceList[i] != 'bottom' and r + 1 < bottom and grid[r][c].bottom == 0:
+                            if entranceAt[i] != 'bottom' and r + 1 < bottom and grid[r][c].bottom == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r + 1, c, 'bottom', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + [foundEntrances]
-                            if entranceList[i] != 'left' and c - 1 >= left and grid[r][c].left == 0:
+                            if entranceAt[i] != 'left' and c - 1 >= left and grid[r][c].left == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r, c - 1, 'left', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + [foundEntrances]
-                            if entranceList[i] != 'top' and r - 1 >= top and grid[r][c].top == 0:
+                            if entranceAt[i] != 'top' and r - 1 >= top and grid[r][c].top == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]] 
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r - 1, c, 'top', 1, path)
@@ -152,15 +160,17 @@ class RegionSolver(threading.Thread):
             i2 = 0
             while i2 < len(entrancePairList):#for i2 in range1:
                 if i2 != i1:
-                    if  entrancePairList[i1][0] == entrancePairList[i2][len(entrancePairList[i2])-1] and entrancePairList[i1][len(entrancePairList[i1])-1] == entrancePairList[i2][0] or \
-                        entrancePairList[i2][0] == entrancePairList[i1][len(entrancePairList[i1])-1] and entrancePairList[i2][len(entrancePairList[i2])-1] == entrancePairList[i1][0]:
+                    reversedList = list(reversed(entrancePairList[i2]))
+                    if reversedList == entrancePairList[i1]:
                         entrancePairList.pop(i2)
-                i2 += 1
+#                     if  entrancePairList[i1][0] == entrancePairList[i2][len(entrancePairList[i2])-1] and entrancePairList[i1][len(entrancePairList[i1])-1] == entrancePairList[i2][0]:
+#                         entrancePairList.pop(i2)
                 if i2 == len(entrancePairList) - 1:
                     break
-            i1 += 1
+                i2 += 1
             if i1 == len(entrancePairList) - 1:
                 break
+            i1 += 1
             
         return entrancePairList
 
