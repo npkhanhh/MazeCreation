@@ -15,6 +15,7 @@ noPathString = 'Number of paths: '
 noDEString = 'Number of deadends: '
 shortestPathString = 'Shortest path length: '
 defaultCellsize = 5
+color = ['#00ff00', '#ff8000', '#eb3849', '#0080ff']
 
 class Cell:
     def __init__(self):
@@ -55,6 +56,8 @@ class GUI:
         self.deFlag.set(0)
         self.zoneFlag = tk.IntVar()
         self.zoneFlag.set(0)
+        self.regionFlag = tk.IntVar()
+        self.regionFlag.set(1)
 
         self.sizeString = tk.StringVar()
         self.sizeString.set('Size:')
@@ -82,6 +85,7 @@ class GUI:
         self.solutionButton = tk.Checkbutton(self.master, text="Solution", variable=self.solutionFlag, command=self.draw)
         self.deadEndButton = tk.Checkbutton(self.master, text="Deadend", variable=self.deFlag, command=self.draw)
         self.zoneButton = tk.Checkbutton(self.master, text="Zone", variable=self.zoneFlag, command=self.draw)
+        self.regionButton = tk.Checkbutton(self.master, text="Region", variable=self.regionFlag, command=self.draw)
 
         self.zoomInButton = tk.Button(self.master, text="+", command=self.zoomIn)
         self.zoomOutButton = tk.Button(self.master, text = "-", command=self.zoomOut)
@@ -122,33 +126,37 @@ class GUI:
         self.solutionButton.grid(row=11, column=1, columnspan=3)
         self.deadEndButton.grid(row=12, column=1, columnspan=3)
         self.zoneButton.grid(row=13, column=1, columnspan=3)
+        self.regionButton.grid(row=14, column=1, columnspan=3)
 
-        self.zoomInButton.grid(row=14, column=1)
-        self.zoomText.grid(row=14, column=2)
-        self.zoomOutButton.grid(row=14, column=3)
+        self.zoomInButton.grid(row=15, column=1)
+        self.zoomText.grid(row=15, column=2)
+        self.zoomOutButton.grid(row=15, column=3)
 
-        self.botEntry.grid(row=15, column=1, columnspan=3)
+        self.botEntry.grid(row=16, column=1, columnspan=3)
         self.botEntry.insert(0, '0')
-        self.runButton.grid(row=16, column=1, columnspan=3)
+        self.runButton.grid(row=17, column=1, columnspan=3)
 
     def doHuysStuff(self):
 #         print "Maze size: {}".format(self.size)
         nRegion = 2
         regionSize = self.size / nRegion
 #         regionMap = np.zeros((nRegion, nRegion))
-        regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
+        self.regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         lock = threading.Lock()
         threads = []
         for i in range(nRegion):
             for j in range(nRegion):
-                regSolver = RegionSolver(self.grid, i*regionSize, j*regionSize, (j+1)*regionSize, (i+1)*regionSize, i, j, regionMap, lock)
+                regSolver = RegionSolver(self.grid, i*regionSize, j*regionSize, (j+1)*regionSize, (i+1)*regionSize, i, j, self.regionMap, lock)
                 threads.append(regSolver)
                 regSolver.start()
         
         for t in threads:
             t.join()
-            
-        print(regionMap)
+
+        print(self.regionMap)
+
+
+
 
     def createMaze(self):
         algo = self.algoName.get()
@@ -170,9 +178,11 @@ class GUI:
         elif algo == 'Kruskal':
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
-        self.draw()
+
         
         self.doHuysStuff()
+        self.draw()
+
 
     def solveMaze(self):
         self.path_list = sa.dfs(self.grid, self.size)
@@ -190,13 +200,15 @@ class GUI:
 
     def draw(self):
         self.canvas.delete(tk.ALL)
-        if self.zoneFlag.get() == 1:
+        if self.zoneFlag.get():
             self.drawZone()
-        if self.deFlag.get() == 1:
+        if self.deFlag.get():
             self.drawDeadend()
-        if self.solutionFlag.get() == 1:
+        if self.regionFlag.get():
+            self.drawRegionMap()
+        if self.solutionFlag.get():
             self.drawSolution(1)
-        if self.gridFlag.get() == 1:
+        if self.gridFlag.get():
             self.drawGrid()
 
 
@@ -231,6 +243,18 @@ class GUI:
                     self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#0080ff', outline='#0080ff')
                 else:
                     self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#e7ff00', outline='#e7ff00')
+
+    def drawPath(self, path, color):
+        for j in range(len(path)):
+            r = path[j][0]
+            c = path[j][1]
+            self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill=color, outline=color)
+
+    def drawRegionMap(self):
+        for i in range(len(self.regionMap)):
+            for j in range(len(self.regionMap[i])):
+                for k in range(len(self.regionMap[i][j])):
+                    self.drawPath(self.regionMap[i][j][k], color[i%len(color)+1])
 
     def divide(self):
         self.marked = sa.dfsMarker(self.grid, self.size)
