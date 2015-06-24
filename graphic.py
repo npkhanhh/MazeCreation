@@ -9,6 +9,7 @@ import sys
 import bot as b
 from RegionSolver import RegionSolver
 import threading
+import random as ran
 
 #### Some global variables
 noPathString = 'Number of paths: '
@@ -18,11 +19,17 @@ defaultCellsize = 5
 color = ['#00ff00', '#ff8000', '#eb3849', '#0080ff']
 
 class Cell:
-    def __init__(self):
-        self.top = 1
-        self.right = 1
-        self.bottom = 1
-        self.left = 1
+    def __init__(self, *args, **kwargs):
+        if args and args[0] == 0:
+            self.top = 0
+            self.right = 0
+            self.bottom = 0
+            self.left = 0
+        else:
+            self.top = 1
+            self.right = 1
+            self.bottom = 1
+            self.left = 1
 
 class GUI:
     def __init__(self, w, h, size):
@@ -57,7 +64,9 @@ class GUI:
         self.zoneFlag = tk.IntVar()
         self.zoneFlag.set(0)
         self.regionFlag = tk.IntVar()
-        self.regionFlag.set(1)
+        self.regionFlag.set(0)
+        self.overlapFlag = tk.IntVar()
+        self.overlapFlag.set(1)
 
         self.sizeString = tk.StringVar()
         self.sizeString.set('Size:')
@@ -91,6 +100,7 @@ class GUI:
         self.zoomOutButton = tk.Button(self.master, text = "-", command=self.zoomOut)
 
         self.runButton = tk.Button(self.master, text="Run Bot", command=self.runBot)
+        self.overlapButton = tk.Checkbutton(self.master, text="Allowed overlap", variable=self.overlapFlag)
 
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
@@ -135,6 +145,7 @@ class GUI:
         self.botEntry.grid(row=16, column=1, columnspan=3)
         self.botEntry.insert(0, '0')
         self.runButton.grid(row=17, column=1, columnspan=3)
+        self.overlapButton.grid(row=18, column=1, columnspan=3)
 
     def doHuysStuff(self):
 #         print "Maze size: {}".format(self.size)
@@ -153,7 +164,6 @@ class GUI:
         for t in threads:
             t.join()
 
-        print(self.regionMap)
 
 
 
@@ -180,7 +190,7 @@ class GUI:
         self.resetGrid()
 
         
-        self.doHuysStuff()
+        #self.doHuysStuff()
         self.draw()
 
 
@@ -209,20 +219,32 @@ class GUI:
         if self.solutionFlag.get():
             self.drawSolution(1)
         if self.gridFlag.get():
-            self.drawGrid()
+            self.drawGrid(1)
 
 
-    def drawGrid(self):
-        for r in range(self.size):
-            for c in range(self.size):
-                if self.grid[r][c].top == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
-                if self.grid[r][c].right == 1:
-                    self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
-                if self.grid[r][c].bottom == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
-                if self.grid[r][c].left == 1:
-                    self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
+    def drawGrid(self, flag):
+        if flag:
+            for r in range(self.size):
+                for c in range(self.size):
+                    if self.grid[r][c].top == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
+                    if self.grid[r][c].right == 1:
+                        self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+                    if self.grid[r][c].bottom == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+                    if self.grid[r][c].left == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
+        else:
+            for r in range(self.size):
+                for c in range(self.size):
+                    if self.tempGrid[r][c].top == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
+                    if self.tempGrid[r][c].right == 1:
+                        self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+                    if self.tempGrid[r][c].bottom == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+                    if self.tempGrid[r][c].left == 1:
+                        self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
 
     def drawSolution(self, mode):
         #if mode == 0:
@@ -399,24 +421,129 @@ class GUI:
             self.draw()
 
     def runBot(self):
+        self.tempGrid = [[Cell(0) for i in range(self.size)] for j in range(self.size)]
+        for i in range(self.size):
+            self.tempGrid[0][i].top = 1
+            self.tempGrid[self.size-1][i].bottom = 1
+            self.tempGrid[i][0].left = 1
+            self.tempGrid[i][self.size-1].right = 1
+        self.canvas.delete(tk.ALL)
+
         no_bot = int(self.botEntry.get())
-        bot = b.bot(self.canvas, 12, 12, 12+self.cellWidth-3, 12+self.cellHeight-3, fill='black')
-        r = 0
-        c = 0
-        for i in range(1, len(self.path_list[0])):
-            ce = self.path_list[0][i]
-            r1 = ce[0]
-            c1 = ce[1]
-            if r1 > r:
-                bot.move(0, self.cellHeight)
-            elif r1 < r:
-                bot.move(0, -self.cellHeight)
-            elif c1 > c:
-                bot.move(self.cellWidth, 0)
-            else:
-                bot.move(-self.cellWidth, 0)
-            r = r1
-            c = c1
+        bots = []
+        paths = [[],[],[],[]]
+        visisted = [[0 for i in range(self.size)] for j in range(self.size)]
+        rmid = self.size/2
+        cmid = self.size/2
+        r = ran.randint(0, rmid-1)
+        c = ran.randint(0, cmid-1)
+        bots.append(b.bot(self.canvas, 0, 0, rmid-1, cmid-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+        paths[0].append([r,c,-1])
+        visisted[r][c] = 1
+        self.updateTempGrid(r, c)
+
+        r = ran.randint(rmid, self.size-1)
+        c = ran.randint(0, cmid-1)
+        bots.append(b.bot(self.canvas, rmid, 0, self.size-1, cmid-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+        paths[1].append([r,c,-1])
+        visisted[r][c] = 1
+        self.updateTempGrid(r, c)
+
+        r = ran.randint(0, rmid-1)
+        c = ran.randint(cmid, self.size-1)
+        bots.append(b.bot(self.canvas, 0, cmid, rmid-1, self.size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+        paths[2].append([r,c,-1])
+        visisted[r][c] = 1
+        self.updateTempGrid(r, c)
+
+        r = ran.randint(rmid, self.size-1)
+        c = ran.randint(cmid, self.size-1)
+        bots.append(b.bot(self.canvas, rmid, cmid, self.size-1, self.size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+        paths[3].append([r,c,-1])
+        visisted[r][c] = 1
+        self.updateTempGrid(r, c)
+        self.drawGrid(0)
+
+        stop = False
+        end = [False, False, False, False]
+        overlap = self.overlapFlag.get()
+        while not stop:
+            stop = True
+            for i in range(4):
+                if not end[i]:
+                    r = paths[i][-1][0]
+                    c = paths[i][-1][1]
+                    move = False
+                    if ((overlap and r>0) or (not overlap and r>bots[i].minr)) and self.tempGrid[r][c].top == 0 and visisted[r-1][c] == 0:
+                        bots[i].move(0, -self.cellHeight)
+                        r = r - 1
+                        paths[i].append([r,c,2])
+                        visisted[r][c] = 1
+                        self.updateTempGrid(r, c)
+                        move = True
+                    elif ((overlap and r<self.size-1) or (not overlap and r<bots[i].maxr)) and self.tempGrid[r][c].bottom == 0 and visisted[r+1][c] == 0:
+                        bots[i].move(0, self.cellHeight)
+                        r = r + 1
+                        paths[i].append([r,c,0])
+                        visisted[r][c] = 1
+                        self.updateTempGrid(r, c)
+                        move = True
+                    elif ((overlap and c>0) or (not overlap and c>bots[i].minc)) and self.tempGrid[r][c].left == 0 and visisted[r][c-1] == 0:
+                        bots[i].move(-self.cellWidth, 0)
+                        c = c - 1
+                        paths[i].append([r,c,1])
+                        visisted[r][c] = 1
+                        self.updateTempGrid(r, c)
+                        move = True
+                    elif ((overlap and c<self.size-1) or (not overlap and c<bots[i].maxc)) and self.tempGrid[r][c].right == 0 and visisted[r][c+1] == 0:
+                        bots[i].move(self.cellWidth, 0)
+                        c = c + 1
+                        paths[i].append([r,c,3])
+                        visisted[r][c] = 1
+                        self.updateTempGrid(r, c)
+                        move = True
+                    if not move:
+                        prev = paths[i][-1][2]
+                        if prev == 0:
+                            bots[i].move(0, -self.cellHeight)
+                        elif prev == 1:
+                            bots[i].move(self.cellWidth, 0)
+                        elif prev == 2:
+                            bots[i].move(0, self.cellHeight)
+                        elif prev == 3:
+                            bots[i].move(-self.cellWidth, 0)
+                        del paths[i][-1]
+                        if not paths[i]:
+                            end[i] = True
+                for i in range(4):
+                    if not end[i]:
+                        stop = False
+                        break
             self.master.update()
             self.master.after(100)
+
+        for i in range(4):
+            print paths[i]
+        count = 0
+        for i in range(self.size):
+            for j in range(self.size):
+                if visisted[i][j]:
+                    count += 1
+
+        print('Explore completed')
+        print('Cell explored: ' + str(count) + '/' + str(self.size*self.size))
+    def updateTempGrid(self, r, c):
+        self.tempGrid[r][c].top = self.grid[r][c].top
+        self.tempGrid[r][c].bottom = self.grid[r][c].bottom
+        self.tempGrid[r][c].left = self.grid[r][c].left
+        self.tempGrid[r][c].right = self.grid[r][c].right
+        if self.grid[r][c].top == 1:
+            self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
+        if self.grid[r][c].right == 1:
+            self.canvas.create_line(10+self.cellWidth*(c+1), 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+        if self.grid[r][c].bottom == 1:
+            self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
+        if self.grid[r][c].left == 1:
+            self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
+
 
