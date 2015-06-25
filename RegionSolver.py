@@ -68,37 +68,52 @@ class RegionSolver(threading.Thread):
             direction: the direction of the current cell with respect to the previous cell
             length: the length of the path from the cell that calls this method up to the current cell (starting cell and ending cell included)
             path: an array of string stores that path ([row1, col1], [row2, col2], ...)
-        Return: list of paths that that connect neighbor regions. Format: [path1, path2, ...]
+        Return: list of paths that connect neighbor regions. Format: [path1, path2, ...]
         """
         entranceCellList = []       # entranceCellList is a list stores coordinates of cells in paths that connects neighbor regions
                                     # [[row1, col1], [row2, col2], ...]
         # Check if this cell has entrance
         entranceAt = []    # list of directions of the entrance of this cell
+        appended = False
         if self.hasEntrance(grid, top, left, right, bottom, row, col, entranceAt):
             path.append([row, col])
-            entranceCellList = entranceCellList + path
+            appended = True
+#             entranceCellList = entranceCellList.append(path)
+            entranceCellList.append(path)
         
         
         if direction != 'right' and 'left' not in entranceAt and col > left and grid[row][col].left == 0:    # check left cell
             pathNew = list(path)
-            pathNew.append([row, col])
+            if not appended:
+                pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row, col - 1, 'left', length + 1, pathNew)
-            entranceCellList = entranceCellList + entranceCells
+            #entranceCellList = entranceCellList + entranceCells
+            for p in entranceCells:
+                entranceCellList.append(p)
         if direction != 'top' and 'bottom' not in entranceAt and row < bottom - 1 and grid[row][col].bottom == 0:    # check bottom cell
             pathNew = list(path)
-            pathNew.append([row, col])
+            if not appended:
+                pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row + 1, col, 'bottom', length + 1, pathNew)
-            entranceCellList = entranceCellList + entranceCells
+            #entranceCellList = entranceCellList + entranceCells
+            for p in entranceCells:
+                entranceCellList.append(p)
         if direction != 'left' and 'right' not in entranceAt and col < right - 1 and grid[row][col].right == 0:    # check right cell
             pathNew = list(path)
-            pathNew.append([row, col])
+            if not appended:
+                pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row, col + 1, 'right', length + 1, pathNew)
-            entranceCellList = entranceCellList + entranceCells
+            #entranceCellList = entranceCellList + entranceCells
+            for p in entranceCells:
+                entranceCellList.append(p)
         if direction != 'bottom' and 'top' not in entranceAt and row > top and grid[row][col].top == 0:    # check top cell
             pathNew = list(path)
-            pathNew.append([row, col])
+            if not appended:
+                pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row - 1, col, 'top', length + 1, pathNew)
-            entranceCellList = entranceCellList + entranceCells
+            #entranceCellList = entranceCellList + entranceCells
+            for p in entranceCells:
+                entranceCellList.append(p)
             
         return entranceCellList
     
@@ -132,25 +147,25 @@ class RegionSolver(threading.Thread):
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r, c + 1, 'right', 1, path)
                                 if len(foundEntrances) > 0:
-                                    entrancePairList = entrancePairList + [foundEntrances]
+                                    entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'bottom' and r + 1 < bottom and grid[r][c].bottom == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r + 1, c, 'bottom', 1, path)
                                 if len(foundEntrances) > 0:
-                                    entrancePairList = entrancePairList + [foundEntrances]
+                                    entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'left' and c - 1 >= left and grid[r][c].left == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]]
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r, c - 1, 'left', 1, path)
                                 if len(foundEntrances) > 0:
-                                    entrancePairList = entrancePairList + [foundEntrances]
+                                    entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'top' and r - 1 >= top and grid[r][c].top == 0:
                                 foundEntrances = []    # list of entrances found by findPath method
                                 path = [[r, c]] 
                                 foundEntrances = self.findPath(grid, top, left, right, bottom, r - 1, c, 'top', 1, path)
                                 if len(foundEntrances) > 0:
-                                    entrancePairList = entrancePairList + [foundEntrances]
+                                    entrancePairList = entrancePairList + foundEntrances
         
         # Remove duplicated paths
         i1 = 0
