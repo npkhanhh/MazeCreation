@@ -5,6 +5,7 @@ except ImportError:
     import tkinter as tk
 import createAlgorithm as ca
 import solveAlgorithm as sa
+from PathConnector import PathConnector
 import sys
 import bot as b
 from RegionSolver import RegionSolver
@@ -147,11 +148,13 @@ class GUI:
         self.runButton.grid(row=17, column=1, columnspan=3)
         self.overlapButton.grid(row=18, column=1, columnspan=3)
 
+
     def doHuysStuff(self):
-#         print "Maze size: {}".format(self.size)
+        self.grid[0][0].left = 0
+        self.grid[-1][-1].right = 0
+        
         nRegion = 2
         regionSize = self.size / nRegion
-#         regionMap = np.zeros((nRegion, nRegion))
         self.regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         lock = threading.Lock()
         threads = []
@@ -163,6 +166,13 @@ class GUI:
         
         for t in threads:
             t.join()
+
+        print(self.regionMap)
+        
+        pathCnt = PathConnector(self.grid, [0, 0], [3, 4], self.regionMap, 0, 0, 2, 6)
+        pathCnt.start()
+        pathCnt.join()
+        print "\nFinish\n"
 
 
 
@@ -190,7 +200,7 @@ class GUI:
         self.resetGrid()
 
         
-        #self.doHuysStuff()
+        self.doHuysStuff()
         self.draw()
 
 
