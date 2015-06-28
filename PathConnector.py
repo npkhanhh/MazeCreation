@@ -37,11 +37,11 @@ class PathConnector(threading.Thread):
         
     def run(self):
         threading.Thread.run(self)
-        shortestPath = self.findShortestPath(self.startCell, self.goalCell, self.xRegion, self.yRegion, [], '')
+        shortestPath = self.findShortestPath(self.startCell, self.goalCell, self.xRegion, self.yRegion, [], '', [-1, -1])
         print "Shortest path: "
         print shortestPath
         
-    def findShortestPath(self, startingCell, endingCell, xRegion, yRegion, path, direction):
+    def findShortestPath(self, startingCell, endingCell, xRegion, yRegion, path, direction, entrance):
         """
         Find the shortest path that lead to the ending cell
         Params:
@@ -50,6 +50,7 @@ class PathConnector(threading.Thread):
             xRegion, yRegion: the coordinate of the current region in the region map
             path: the path, up to now
             direction: the direction of the current region wrt the previous region. It's used to avoid traveling the old region
+            entrance: the entrance cell from which this method starts to explore the current region
         Return:
             The shortest path that leads to the ending cell
             [] if no path was found
@@ -84,7 +85,7 @@ class PathConnector(threading.Thread):
                                 if idx1 <= idx2:
                                     shortestPath = p1[idx1:idx2+1]
                                 else:
-                                    shortestPath = list(reversed(p1[idx1:idx2+1]))
+                                    shortestPath = list(reversed(p1[idx2:idx1+1]))
                                 path = path + shortestPath
                                 return path
                             else:   # endCell in another path
@@ -95,7 +96,7 @@ class PathConnector(threading.Thread):
                                 else:   # couldn't find the connected path (2 paths don't intersect each other) => endingCell is in an isolated area
                                     break
                     if not endCellInPath: 
-                        foundPath = self.findGoalInDeadend(p1, startingCell, endingCell, xRegion, yRegion) 
+                        foundPath = self.findGoalInDeadend(p1, startingCell, endingCell, xRegion, yRegion, direction) 
                         if len(foundPath)>0:
                             path = path + foundPath
                             return path
@@ -114,22 +115,32 @@ class PathConnector(threading.Thread):
                             end = subPath[-1]
                             dirList = self.cellIsAt(end, xRegion, yRegion)
                             foundPath = []
-                            for dir in dirList:
+                            for d in dirList:
                                 newPath = list(path)
                                 newPath = newPath + subPath
-                                if dir == 'top' and xRegion-1>=0 and direction!='bottom':
-                                    foundPath = self.findShortestPath([end[0]-1, end[1]], endingCell, xRegion-1, yRegion, newPath, dir)
-                                elif dir == 'bottom' and xRegion+1<self.nRegion and direction!='top':
-                                    foundPath = self.findShortestPath([end[0]+1, end[1]], endingCell, xRegion+1, yRegion, newPath, dir)
-                                elif dir == 'left' and yRegion-1>=0 and direction!='right':
-                                    foundPath = self.findShortestPath([end[0], end[1]-1], endingCell, xRegion, yRegion-1, newPath, dir)
-                                elif dir == 'right' and yRegion+1<self.nRegion and direction!='left':
-                                    foundPath = self.findShortestPath([end[0], end[1]+1], endingCell, xRegion, yRegion+1, newPath, dir)
+                                if d == 'top' and self.grid[end[0]][end[1]].top==0 and xRegion-1>=0:
+                                    nextCell = [end[0]-1, end[1]]
+                                    if end != entrance:
+                                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion-1, yRegion, newPath, d, nextCell)
+                                elif d == 'bottom' and self.grid[end[0]][end[1]].bottom==0 and xRegion+1<self.nRegion:
+                                    nextCell = [end[0]+1, end[1]]
+                                    if end != entrance:
+                                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion+1, yRegion, newPath, d, nextCell)
+                                elif d == 'left' and self.grid[end[0]][end[1]].left==0 and yRegion-1>=0:
+                                    nextCell = [end[0], end[1]-1]
+                                    if end != entrance:
+                                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion, yRegion-1, newPath, d, nextCell)
+                                elif d == 'right' and self.grid[end[0]][end[1]].right==0 and yRegion+1<self.nRegion:
+                                    nextCell = [end[0], end[1]+1]
+                                    if end != entrance:
+                                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion, yRegion+1, newPath, d, nextCell)
                                 if len(foundPath)>0:
                                     return foundPath
         if not startCellInPath: # starting cell is in a deadend
             # Look for endingCell if it's in the deadend
-            foundPath = self.gotoDeadend(startingCell, endingCell, direction, path)
+            boundary = self.getBoundary(xRegion, yRegion)
+            foundPath = self.gotoNearestPath(path, pathsInRegion, startingCell, endingCell, xRegion, yRegion, boundary, '')
+            #foundPath = self.gotoDeadend(startingCell, endingCell, direction, path)
             if len(foundPath) > 0:
                 return foundPath
             else:
@@ -216,7 +227,7 @@ class PathConnector(threading.Thread):
             result = result + p2[0:idx2+1]
             return result
     
-    def findGoalInDeadend(self, path, startingCell, endingCell, xRegion, yRegion):
+    def findGoalInDeadend(self, path, startingCell, endingCell, xRegion, yRegion, direction):
         """
         Find the deadend where endingCell lies on and return the path from startingCell to endingCell
         Note: the starting cell is in a path
@@ -224,6 +235,7 @@ class PathConnector(threading.Thread):
             path: the path where startingCell lies on
             startingCell, endingCell: start and goal
             xRegion, yRegion: the coordinate of the current region
+            direction: the direction of the current region wrt the previous region. It's used to avoid traveling the old region
         Return:
             the path from startingCell to endingCell
             if could not find, which means endingCell is isolated, return []
@@ -240,7 +252,7 @@ class PathConnector(threading.Thread):
             p1 = list(reversed(p1))
             p2 = list(path[idx:])
             subpaths = [p1, p2]
-            top, bottom, left, right = self.getBoundary(xRegion, yRegion)
+            top, left, bottom, right = self.getBoundary(xRegion, yRegion)
             
             for subpath in subpaths:
                 for i in range(len(subpath)):
@@ -273,6 +285,38 @@ class PathConnector(threading.Thread):
                             result = subpath[0:i+1]
                             result = result + foundPath
                             return result
+                        
+            # If no path was found, then ending cell is in the isolated area of this region
+            # We have to go to other regions to approach that area
+            for subpath in subpaths:    # iterate each entrance to explore neighbor regions to approach the isolated area of this region
+                end = subpath[-1]
+                dirList = self.cellIsAt(end, xRegion, yRegion)
+                for d in dirList:
+                    if d == 'top' and self.grid[end[0]][end[1]].top == 0 and direction != 'bottom' and xRegion-1 >= 0:
+                        nextCell = [end[0]-1, end[1]]
+                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion-1, yRegion, [], 'top', nextCell)
+                        if len(foundPath) > 0:
+                            result = subpath + foundPath
+                            return result
+                    if d == 'bottom' and self.grid[end[0]][end[1]].bottom == 0 and direction != 'top' and xRegion+1 < self.nRegion:
+                        nextCell = [end[0]+1, end[1]]
+                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion+1, yRegion, [], 'bottom', nextCell)
+                        if len(foundPath) > 0:
+                            result = subpath + foundPath
+                            return result
+                    if d == 'left' and self.grid[end[0]][end[1]].left == 0 and direction != 'right' and yRegion-1 >= 0:
+                        nextCell = [end[0], end[1]-1]
+                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion, yRegion-1, [], 'left', nextCell)
+                        if len(foundPath) > 0:
+                            result = subpath + foundPath
+                            return result
+                    if d == 'right' and self.grid[end[0]][end[1]].right == 0 and direction != 'left' and yRegion+1 < self.nRegion:
+                        nextCell = [end[0], end[1]+1]
+                        foundPath = self.findShortestPath(nextCell, endingCell, xRegion, yRegion+1, [], 'right', nextCell)
+                        if len(foundPath) > 0:
+                            result = subpath + foundPath
+                            return result
+                
             return []    
                       
     def gotoDeadend(self, cell, endingCell, direction, path):
@@ -343,7 +387,7 @@ class PathConnector(threading.Thread):
         left = regionSize * yRegion
         right = left + regionSize
         bottom = top + regionSize
-        result = [top, bottom, left, right]
+        result = [top, left, bottom, right]
         return result
                     
         
@@ -439,39 +483,102 @@ class PathConnector(threading.Thread):
         
         return directions
 
-
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
-                    
+    def gotoNearestPath(self, path, pathList, cell, destination, xRegion, yRegion, boundary, direction):
+        """
+        When starting cell is in a deadend, this method goes a long that deadend to find the nearest path, then call the self.findShortestPath method
+        If can't reach any path in this region from the starting cell, go to neighbor region and explore
+        Params:
+            path: the traversed path up to this cell
+            pathList: list of all path in the current region
+            cell: the coordinate of the current cell
+            destination: [x, y] the destination cell
+            xRegion, yRegion: coordinate of the current region in region map
+            boundary: the boundary of the current region  ([top, left, bottom, right])
+            direction: the direction of the current cell wrt the previous cell
+        """
+        r, c = cell
+        top, left, bottom, right = boundary
+        
+        if r == destination[0] and c == destination[1]:
+            path.append(cell)
+            return path
+        elif self.isInPaths(cell, xRegion, yRegion):
+            foundPath = self.findShortestPath(cell, destination, xRegion, yRegion, path, '', [-1, -1])
+            if len(foundPath) > 0:
+                return foundPath
+            else:
+                return []
+        
+        entranceCells = []   # if encounter entrance cell, store it and explore or direction then come back exploring neighbor regions later (BFS) 
+        if self.grid[r][c].top == 0 and [r-1, c] not in path and direction != 'bottom':
+            if r-1 >= top:
+                newPath = list(path)
+                newPath.append(cell)
+                foundPath = self.gotoNearestPath(newPath, pathList, [r-1, c], destination, xRegion, yRegion, boundary, 'top')
+                if len(foundPath) > 0:
+                    return foundPath
+            elif r-1 >= 0: # There's neighbor region
+                entranceCells.append(cell) # save this entrance cell and explore later
+        if self.grid[r][c].bottom == 0 and [r+1, c] not in path and direction != 'top':
+            if r+1 < bottom:
+                newPath = list(path)
+                newPath.append(cell)
+                foundPath = self.gotoNearestPath(newPath, pathList, [r+1, c], destination, xRegion, yRegion, boundary, 'bottom')
+                if len(foundPath) > 0:
+                    return foundPath
+            elif r+1 < self.mazeSize-1: # There's neighbor region
+                entranceCells.append(cell) # save this entrance cell and explore later
+        if self.grid[r][c].left == 0 and [r, c-1] not in path and direction != 'right':
+            if c-1 >= left:
+                newPath = list(path)
+                newPath.append(cell)
+                foundPath = self.gotoNearestPath(newPath, pathList, [r, c-1], destination, xRegion, yRegion, boundary, 'left')
+                if len(foundPath) > 0:
+                    return foundPath
+            elif c-1 >= 0: # There's neighbor region
+                entranceCells.append(cell) # save this entrance cell and explore later
+        if self.grid[r][c].right == 0 and [r, c+1] not in path and direction != 'left':
+            if c+1 < right:
+                newPath = list(path)
+                newPath.append(cell)
+                foundPath = self.gotoNearestPath(newPath, pathList, [r, c+1], destination, xRegion, yRegion, boundary, 'right')
+                if len(foundPath) > 0:
+                    return foundPath
+            elif c+1 < self.mazeSize-1: # There's neighbor region
+                entranceCells.append(cell) # save this entrance cell and explore later
+        
+        # Explore the next regions
+        for entrance in entranceCells:
+            dirList = self.cellIsAt(entrance, xRegion, yRegion)
+            for d in dirList:
+                if self.grid[entrance[0]][entrance[1]].top == 0 and d=='top' and entrance not in path:
+                    newPath = list(path)
+                    newPath.append(entrance)
+                    nextCell = [entrance[0]-1, entrance[1]]
+                    foundPath = self.findShortestPath(nextCell, destination, xRegion-1, yRegion, newPath, 'top', nextCell)
+                    if len(foundPath) > 0:
+                        return foundPath
+                if self.grid[entrance[0]][entrance[1]].bottom == 0 and d=='bottom' and entrance not in path:
+                    newPath = list(path)
+                    newPath.append(entrance)
+                    nextCell = [entrance[0]+1, entrance[1]]
+                    foundPath = self.findShortestPath(nextCell, destination, xRegion+1, yRegion, newPath, 'bottom', nextCell)
+                    if len(foundPath) > 0:
+                        return foundPath
+                if self.grid[entrance[0]][entrance[1]].left == 0 and d=='left' and entrance not in path:
+                    newPath = list(path)
+                    newPath.append(entrance)
+                    nextCell = [entrance[0], entrance[1]-1]
+                    foundPath = self.findShortestPath(nextCell, destination, xRegion, yRegion-1, newPath, 'left', nextCell)
+                    if len(foundPath) > 0:
+                        return foundPath
+                if self.grid[entrance[0]][entrance[1]].right == 0 and d=='right' and entrance not in path:
+                    newPath = list(path)
+                    newPath.append(entrance)
+                    nextCell = [entrance[0], entrance[1]+1]
+                    foundPath = self.findShortestPath(nextCell, destination, xRegion, yRegion+1, newPath, 'right', nextCell)
+                    if len(foundPath) > 0:
+                        return foundPath
+                
+        return []
+    
