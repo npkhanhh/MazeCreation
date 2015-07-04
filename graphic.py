@@ -331,6 +331,9 @@ class GUI:
         
 
     def doHuysStuff(self):
+        self.setupTest1()
+        self.grid[0][0].left = 0
+        self.grid[-1][-1].right = 0
         
         ########## Explore ##########
         nRegion = 2
@@ -350,9 +353,22 @@ class GUI:
         print(self.regionMap)
         
         
-        ########## Solve ##########1
-        start = [0, 0]
-        goal = [5, 5]
+        ########## Solve ##########
+        # Test case 01
+#         start = [0, 0]
+#         goal = [5, 5]
+
+        # Test case 02
+#         start = [0, 0]
+#         goal = [4, 4]
+        
+        # Test case 03
+#         start = [3, 4]
+#         goal = [5, 2]
+
+        # Test case 05
+        start = [4, 4]
+        goal = [0, 4]
         xRegion = start[0]/regionSize
         yRegion = start[1]/regionSize
         pathCnt = PathConnector(self.grid, start, goal, self.regionMap, xRegion, yRegion, nRegion, self.size)
