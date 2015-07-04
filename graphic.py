@@ -627,45 +627,27 @@ class GUI:
 
         no_bot = int(self.botEntry.get())
         bots = []
-        paths = [[],[],[],[]]
+        paths = [[] for i in range(no_bot)]
         visisted = [[0 for i in range(self.size)] for j in range(self.size)]
-        rmid = self.size/2
-        cmid = self.size/2
-        r = ran.randint(0, rmid-1)
-        c = ran.randint(0, cmid-1)
-        bots.append(b.bot(self.canvas, 0, 0, rmid-1, cmid-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
-        paths[0].append([r,c,-1])
-        visisted[r][c] = 1
-        self.updateTempGrid(r, c)
+        for i in range(no_bot):
+            r = ran.randint(0, self.size-1)
+            c = ran.randint(0, self.size-1)
+            while visisted[r][c]:
+                r = ran.randint(0, self.size-1)
+                c = ran.randint(0, self.size-1)
+            bots.append(b.bot(self.canvas, 0, 0, self.size-1, self.size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+            paths[i].append([r,c,-1])
+            visisted[r][c] = 1
+            self.updateTempGrid(r, c)
 
-        r = ran.randint(rmid, self.size-1)
-        c = ran.randint(0, cmid-1)
-        bots.append(b.bot(self.canvas, rmid, 0, self.size-1, cmid-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
-        paths[1].append([r,c,-1])
-        visisted[r][c] = 1
-        self.updateTempGrid(r, c)
-
-        r = ran.randint(0, rmid-1)
-        c = ran.randint(cmid, self.size-1)
-        bots.append(b.bot(self.canvas, 0, cmid, rmid-1, self.size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
-        paths[2].append([r,c,-1])
-        visisted[r][c] = 1
-        self.updateTempGrid(r, c)
-
-        r = ran.randint(rmid, self.size-1)
-        c = ran.randint(cmid, self.size-1)
-        bots.append(b.bot(self.canvas, rmid, cmid, self.size-1, self.size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
-        paths[3].append([r,c,-1])
-        visisted[r][c] = 1
-        self.updateTempGrid(r, c)
         self.drawGrid(0)
 
         stop = False
-        end = [False, False, False, False]
+        end = [False for i in range(no_bot)]
         overlap = self.overlapFlag.get()
         while not stop:
             stop = True
-            for i in range(4):
+            for i in range(no_bot):
                 if not end[i]:
                     r = paths[i][-1][0]
                     c = paths[i][-1][1]
@@ -718,7 +700,7 @@ class GUI:
             self.master.update()
             self.master.after(100)
 
-        for i in range(4):
+        for i in range(no_bot):
             print paths[i]
         count = 0
         for i in range(self.size):
@@ -728,6 +710,7 @@ class GUI:
 
         print('Explore completed')
         print('Cell explored: ' + str(count) + '/' + str(self.size*self.size))
+
     def updateTempGrid(self, r, c):
         self.tempGrid[r][c].top = self.grid[r][c].top
         self.tempGrid[r][c].bottom = self.grid[r][c].bottom
@@ -741,5 +724,3 @@ class GUI:
             self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*(r+1), 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1))
         if self.grid[r][c].left == 1:
             self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
-
-
