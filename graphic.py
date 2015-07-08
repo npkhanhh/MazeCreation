@@ -1,3 +1,4 @@
+from FindSolution import FindSolution
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -148,193 +149,8 @@ class GUI:
         self.runButton.grid(row=17, column=1, columnspan=3)
         self.overlapButton.grid(row=18, column=1, columnspan=3)
 
-    def setupTest1(self):
-        self.grid[0][0].top = 1
-        self.grid[0][0].bottom = 0
-        self.grid[0][0].left = 1
-        self.grid[0][0].right = 0
-        
-        self.grid[0][1].top = 1
-        self.grid[0][1].bottom = 1
-        self.grid[0][1].left = 0
-        self.grid[0][1].right = 0
-        
-        self.grid[0][2].top = 1
-        self.grid[0][2].bottom = 1
-        self.grid[0][2].left = 0
-        self.grid[0][2].right = 0
-        
-        self.grid[0][3].top = 1
-        self.grid[0][3].bottom = 0
-        self.grid[0][3].left = 0
-        self.grid[0][3].right = 1
-        
-        self.grid[0][4].top = 1
-        self.grid[0][4].bottom = 1
-        self.grid[0][4].left = 1
-        self.grid[0][4].right = 0
-        
-        self.grid[0][5].top = 1
-        self.grid[0][5].bottom = 0
-        self.grid[0][5].left = 0
-        self.grid[0][5].right = 1
-        
-        self.grid[1][0].top = 0
-        self.grid[1][0].bottom = 0
-        self.grid[1][0].left = 1
-        self.grid[1][0].right = 0
-        
-        self.grid[1][1].top = 1
-        self.grid[1][1].bottom = 1
-        self.grid[1][1].left = 0
-        self.grid[1][1].right = 0
-        
-        self.grid[1][2].top = 1
-        self.grid[1][2].bottom = 0
-        self.grid[1][2].left = 0
-        self.grid[1][2].right = 1
-        
-        self.grid[1][3].top = 0
-        self.grid[1][3].bottom = 1
-        self.grid[1][3].left = 1
-        self.grid[1][3].right = 0
-        
-        self.grid[1][4].top = 1
-        self.grid[1][4].bottom = 1
-        self.grid[1][4].left = 0
-        self.grid[1][4].right = 0
-        
-        self.grid[1][5].top = 0
-        self.grid[1][5].bottom = 1
-        self.grid[1][5].left = 0
-        self.grid[1][5].right = 1
-        
-        self.grid[2][0].top = 0
-        self.grid[2][0].bottom = 1
-        self.grid[2][0].left = 1
-        self.grid[2][0].right = 0
-        
-        self.grid[2][1].top = 1
-        self.grid[2][1].bottom = 0
-        self.grid[2][1].left = 0
-        self.grid[2][1].right = 1
-        
-        self.grid[2][2].top = 10
-        self.grid[2][2].bottom = 1
-        self.grid[2][2].left = 1
-        self.grid[2][2].right = 0
-        
-        self.grid[2][3].top = 1
-        self.grid[2][3].bottom = 1
-        self.grid[2][3].left = 0
-        self.grid[2][3].right = 0
-        
-        self.grid[2][4].top = 1
-        self.grid[2][4].bottom = 1
-        self.grid[2][4].left = 0
-        self.grid[2][4].right = 0
-        
-        self.grid[2][5].top = 1
-        self.grid[2][5].bottom = 0
-        self.grid[2][5].left = 0
-        self.grid[2][5].right = 1
-        
-        self.grid[3][0].top = 1
-        self.grid[3][0].bottom = 0
-        self.grid[3][0].left = 1
-        self.grid[3][0].right = 0
-        
-        self.grid[3][1].top = 0
-        self.grid[3][1].bottom = 1
-        self.grid[3][1].left = 0
-        self.grid[3][1].right = 1
-        
-        self.grid[3][2].top = 1
-        self.grid[3][2].bottom = 1
-        self.grid[3][2].left = 1
-        self.grid[3][2].right = 0
-        
-        self.grid[3][3].top = 1
-        self.grid[3][3].bottom = 0
-        self.grid[3][3].left = 0
-        self.grid[3][3].right = 0
-        
-        self.grid[3][4].top = 1
-        self.grid[3][4].bottom = 1
-        self.grid[3][4].left = 0
-        self.grid[3][4].right = 1
-        
-        self.grid[3][5].top = 0
-        self.grid[3][5].bottom = 0
-        self.grid[3][5].left = 1
-        self.grid[3][5].right = 1
-        
-        self.grid[4][0].top = 0
-        self.grid[4][0].bottom = 0
-        self.grid[4][0].left = 1
-        self.grid[4][0].right = 1
-        
-        self.grid[4][1].top = 1
-        self.grid[4][1].bottom = 0
-        self.grid[4][1].left = 1
-        self.grid[4][1].right = 0
-        
-        self.grid[4][2].top = 1
-        self.grid[4][2].bottom = 1
-        self.grid[4][2].left = 0
-        self.grid[4][2].right = 0
-        
-        self.grid[4][3].top = 0
-        self.grid[4][3].bottom = 0
-        self.grid[4][3].left = 0
-        self.grid[4][3].right = 1
-        
-        self.grid[4][4].top = 1
-        self.grid[4][4].bottom = 1
-        self.grid[4][4].left = 1
-        self.grid[4][4].right = 0
-        
-        self.grid[4][5].top = 0
-        self.grid[4][5].bottom = 1
-        self.grid[4][5].left = 0
-        self.grid[4][5].right = 1
-        
-        self.grid[5][0].top = 0
-        self.grid[5][0].bottom = 1
-        self.grid[5][0].left = 1
-        self.grid[5][0].right = 0
-        
-        self.grid[5][1].top = 0
-        self.grid[5][1].bottom = 1
-        self.grid[5][1].left = 0
-        self.grid[5][1].right = 1
-        
-        self.grid[5][2].top = 1
-        self.grid[5][2].bottom = 1
-        self.grid[5][2].left = 1
-        self.grid[5][2].right = 0
-        
-        self.grid[5][3].top = 0
-        self.grid[5][3].bottom = 1
-        self.grid[5][3].left = 0
-        self.grid[5][3].right = 0
-        
-        self.grid[5][4].top = 1
-        self.grid[5][4].bottom = 1
-        self.grid[5][4].left = 0
-        self.grid[5][4].right = 0
-        
-        self.grid[5][5].top = 1
-        self.grid[5][5].bottom = 1
-        self.grid[5][5].left = 0
-        self.grid[5][5].right = 1
-        
-
     def doHuysStuff(self):
-        self.setupTest1()
-        self.grid[0][0].left = 0
-        self.grid[-1][-1].right = 0
-        
+        # TODO: use bots to explore maze 
         ########## Explore ##########
         nRegion = 2
         regionSize = self.size / nRegion
@@ -351,31 +167,6 @@ class GUI:
             t.join()
 
         print(self.regionMap)
-        
-        
-        ########## Solve ##########
-        # Test case 01
-#         start = [0, 0]
-#         goal = [5, 5]
-
-        # Test case 02
-#         start = [0, 0]
-#         goal = [4, 4]
-        
-        # Test case 03
-#         start = [3, 4]
-#         goal = [5, 2]
-
-        # Test case 05
-        start = [4, 4]
-        goal = [0, 4]
-        xRegion = start[0]/regionSize
-        yRegion = start[1]/regionSize
-        pathCnt = PathConnector(self.grid, start, goal, self.regionMap, xRegion, yRegion, nRegion, self.size)
-        pathCnt.start()
-        pathCnt.join()
-        print "\nFinish\n"
-
 
 
 
@@ -407,17 +198,24 @@ class GUI:
 
 
     def solveMaze(self):
-        self.path_list = sa.dfs(self.grid, self.size)
-        self.draw()
-        self.no_path = len(self.path_list)
-        for i in range(len(self.path_list)):
-            if len(self.path_list[i]) < self.shortestPathLength  :
-                self.shortestPathLength = len(self.path_list[i])
-        self.noPath.set(noPathString + str(self.no_path))
-        if self.no_path != 0:
-            self.shortestPath.set(shortestPathString + str(self.shortestPathLength))
-        else:
-            self.shortestPath.set(shortestPathString)
+        # Solve maze by using explored paths
+        start = [4, 4]
+        goal = [0, 4]
+        # TODO: set the number of region before exploring maze
+        nRegion = 2
+        FindSolution(self.grid, self.regionMap, nRegion, self.size, start, goal)
+        
+#         self.path_list = sa.dfs(self.grid, self.size)
+#         self.draw()
+#         self.no_path = len(self.path_list)
+#         for i in range(len(self.path_list)):
+#             if len(self.path_list[i]) < self.shortestPathLength  :
+#                 self.shortestPathLength = len(self.path_list[i])
+#         self.noPath.set(noPathString + str(self.no_path))
+#         if self.no_path != 0:
+#             self.shortestPath.set(shortestPathString + str(self.shortestPathLength))
+#         else:
+#             self.shortestPath.set(shortestPathString)
         #print self.path_list
 
     def draw(self):
