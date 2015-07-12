@@ -55,8 +55,7 @@ class GUI:
         self.sizeString.set('Size:')
         self.zoomString = tk.StringVar()
         self.zoomString.set('Zoom')
-        self.pause = threading.Event()
-        self.pause.set()
+        self.pause = False
 
     def createWindow(self):
         self.frame = tk.Frame(self.master, width = self.w, height=self.h)
@@ -86,7 +85,9 @@ class GUI:
 
         self.runButton = tk.Button(self.master, text="Run Bot", command=self.runBot)
         self.overlapButton = tk.Checkbutton(self.master, text="Allowed overlap", variable=self.overlapFlag)
-        self.pauseButton = tk.Button(self.master, text="Pause", command=self.pause)
+        self.pauseButton = tk.Button(self.master, text="Pause")
+        self.pauseButton.bind("<Button-1>", self.pausePressed)
+        self.master.bind("<space>", self.pausePressed)
 
         self.pathText = tk.Label(self.master, textvariable=self.noPath)
         self.deadEndText = tk.Label(self.master, textvariable=self.noDE)
@@ -563,10 +564,77 @@ class GUI:
         self.drawGrid(self.tempMaze)
 
         self.stop = False
-        thread = threading.Thread(target = self.loopBot, args = (size, ))
-        thread.start()
-        thread.join()
+        end = [False for i in range(self.no_bot)]
+        overlap = self.overlapFlag.get()
+        while not self.stop:
+            if not self.pause:
+                self.stop = True
+                for i in range(self.no_bot):
+                    if not end[i]:
+                        r = self.paths[i][-1][0]
+                        c = self.paths[i][-1][1]
+                        move = False
+                        if ((overlap and r>0) or (not overlap and r>self.bots[i].minr)) and self.tempMaze.grid[r][c].top == 0 and self.visisted[r-1][c] == 0:
+                            self.bots[i].move(0, -self.cellHeight)
+                            r = r - 1
+                            self.paths[i].append([r,c,2])
+                            self.visisted[r][c] = 1
+                            self.updateTempMaze(r, c)
+                            move = True
+                        elif ((overlap and r<size-1) or (not overlap and r<self.bots[i].maxr)) and self.tempMaze.grid[r][c].bottom == 0 and self.visisted[r+1][c] == 0:
+                            self.bots[i].move(0, self.cellHeight)
+                            r = r + 1
+                            self.paths[i].append([r,c,0])
+                            self.visisted[r][c] = 1
+                            self.updateTempMaze(r, c)
+                            move = True
+                        elif ((overlap and c>0) or (not overlap and c>self.bots[i].minc)) and self.tempMaze.grid[r][c].left == 0 and self.visisted[r][c-1] == 0:
+                            self.bots[i].move(-self.cellWidth, 0)
+                            c = c - 1
+                            self.paths[i].append([r,c,1])
+                            self.visisted[r][c] = 1
+                            self.updateTempMaze(r, c)
+                            move = True
+                        elif ((overlap and c<size-1) or (not overlap and c<self.bots[i].maxc)) and self.tempMaze.grid[r][c].right == 0 and self.visisted[r][c+1] == 0:
+                            self.bots[i].move(self.cellWidth, 0)
+                            c = c + 1
+                            self.paths[i].append([r,c,3])
+                            self.visisted[r][c] = 1
+                            self.updateTempMaze(r, c)
+                            move = True
+                        if not move:
+                            prev = self.paths[i][-1][2]
+                            if prev == 0:
+                                self.bots[i].move(0, -self.cellHeight)
+                            elif prev == 1:
+                                self.bots[i].move(self.cellWidth, 0)
+                            elif prev == 2:
+                                self.bots[i].move(0, self.cellHeight)
+                            elif prev == 3:
+                                self.bots[i].move(-self.cellWidth, 0)
+                            del self.paths[i][-1]
+                            if not self.paths[i]:
+                                end[i] = True
+                    for i in range(4):
+                        if not end[i]:
+                            self.stop = False
+                            break
+                self.master.update()
+                self.master.after(100)
+            else:
+                self.master.update()
+                self.master.after(10)
 
+        for i in range(self.no_bot):
+            print self.paths[i]
+        count = 0
+        for i in range(size):
+            for j in range(size):
+                if self.visisted[i][j]:
+                    count += 1
+
+        print('Explore completed')
+        print('Cell explored: ' + str(count) + '/' + str(size*size))
 
     def updateTempMaze(self, r, c):
         self.tempMaze.grid[r][c].top = self.maze.grid[r][c].top
@@ -582,81 +650,7 @@ class GUI:
         if self.tempMaze.grid[r][c].left == 1:
             self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
 
-    def pause(self):
-        if self.pause.is_set:
-            self.pause.clear()
-        else:
-            self.pause.set()
+    def pausePressed(self, event):
+        self.pause = not self.pause
+        print self.pause
 
-    def loopBot(self, size):
-        self.end = [False for i in range(self.no_bot)]
-        self.overlap = self.overlapFlag.get()
-        while not self.stop:
-            print(1)
-            self.pause.wait()
-            print(2)
-            self.stop = True
-            for i in range(self.no_bot):
-                if not self.end[i]:
-                    r = self.paths[i][-1][0]
-                    c = self.paths[i][-1][1]
-                    move = False
-                    if ((self.overlap and r>0) or (not self.overlap and r>self.bots[i].minr)) and self.tempMaze.grid[r][c].top == 0 and self.visisted[r-1][c] == 0:
-                        self.bots[i].move(0, -self.cellHeight)
-                        r = r - 1
-                        self.paths[i].append([r,c,2])
-                        self.visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((self.overlap and r<size-1) or (not self.overlap and r<self.bots[i].maxr)) and self.tempMaze.grid[r][c].bottom == 0 and self.visisted[r+1][c] == 0:
-                        self.bots[i].move(0, self.cellHeight)
-                        r = r + 1
-                        self.paths[i].append([r,c,0])
-                        self.visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((self.overlap and c>0) or (not self.overlap and c>self.bots[i].minc)) and self.tempMaze.grid[r][c].left == 0 and self.visisted[r][c-1] == 0:
-                        self.bots[i].move(-self.cellWidth, 0)
-                        c = c - 1
-                        self.paths[i].append([r,c,1])
-                        self.visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((self.overlap and c<size-1) or (not self.overlap and c<self.bots[i].maxc)) and self.tempMaze.grid[r][c].right == 0 and self.visisted[r][c+1] == 0:
-                        self.bots[i].move(self.cellWidth, 0)
-                        c = c + 1
-                        self.paths[i].append([r,c,3])
-                        self.visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    if not move:
-                        prev = self.paths[i][-1][2]
-                        if prev == 0:
-                            self.bots[i].move(0, -self.cellHeight)
-                        elif prev == 1:
-                            self.bots[i].move(self.cellWidth, 0)
-                        elif prev == 2:
-                            self.bots[i].move(0, self.cellHeight)
-                        elif prev == 3:
-                            self.bots[i].move(-self.cellWidth, 0)
-                        del self.paths[i][-1]
-                        if not self.paths[i]:
-                            self.end[i] = True
-                for i in range(4):
-                    if not self.end[i]:
-                        self.stop = False
-                        break
-            self.master.update()
-            self.master.after(100)
-
-        if self.stop:
-            for i in range(self.no_bot):
-                print self.paths[i]
-            count = 0
-            for i in range(size):
-                for j in range(size):
-                    if self.visisted[i][j]:
-                        count += 1
-
-            print('Explore completed')
-            print('Cell explored: ' + str(count) + '/' + str(size*size))
