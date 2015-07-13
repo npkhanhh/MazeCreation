@@ -97,6 +97,8 @@ class GUI:
 
         #self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
         #self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
+        self.canvas.bind("<Control-1>", self.setStart)
+        self.canvas.bind("<Control-3>", self.setGoal)
         self.xscrollbar.grid(row=1, column=0, sticky=tk.E+tk.W)
         self.yscrollbar.grid(row=0, column=1, sticky=tk.N+tk.S)
         self.canvas.grid(row=0, column=0, sticky=tk.NW)
@@ -654,3 +656,18 @@ class GUI:
         self.pause = not self.pause
         print self.pause
 
+    def setStart(self, event):
+        x = event.x - 10
+        y = event.y - 10
+        r = int(y / self.cellHeight)
+        c = int(x / self.cellWidth)
+        self.maze.start = [r, c]
+        print([r, c])
+
+    def setGoal(self, event):
+        x = event.x - 10
+        y = event.y - 10
+        r = int(y / self.cellHeight)
+        c = int(x / self.cellWidth)
+        self.maze.goal = [r, c]
+        print([r, c])

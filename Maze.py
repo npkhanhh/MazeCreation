@@ -14,6 +14,8 @@ class Maze:
         self.path_list=[]
         self.marked=[]
         self.shortestPathLength = self.size*self.size+1
+        self.start = [0, 0]
+        self.end = [size-1, size-1]
 
     def create(self, algo, size):
         self.size = size
