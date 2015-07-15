@@ -14,8 +14,8 @@ canvasHeight = 820
 sys.setrecursionlimit(100000)
 
 maze = m.Maze(mazeSize)
-#gui = ng.GUI(canvasWidth, canvasHeight, maze)
-gui = g.GUI(canvasWidth, canvasHeight, mazeSize)
+gui = ng.GUI(canvasWidth, canvasHeight, maze)
+#gui = g.GUI(canvasWidth, canvasHeight, mazeSize)
 
 gui.createWindow()
 gui.run()
