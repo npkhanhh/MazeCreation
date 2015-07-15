@@ -4,27 +4,20 @@ import solveAlgorithm as sa
 import sys
 
 class Maze:
-    def __init__(self, size):
+    def __init__(self, size, algo='Backtracker'):
         self.size = size
-        # self.cellWidth = (w - 20)/size
-        # self.cellHeight = (h - 20)/size
-        self.de = []
-        self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
-        self.no_path = 0
-        self.path_list=[]
-        self.marked=[]
-        self.shortestPathLength = self.size*self.size+1
+        self.create(algo, size)
         self.start = [0, 0]
         self.end = [size-1, size-1]
 
     def create(self, algo, size):
         self.size = size
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
-        if algo == 'Recursive Backtracker':
+        if algo == 'Recursive Backtracker' or algo == 0:
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
-        elif algo == 'Backtracker':
+        elif algo == 'Backtracker' or algo == 1:
             self.grid = ca.backtracker(self.grid, self.size)
-        elif algo == 'Kruskal':
+        elif algo == 'Kruskal' or algo == 2:
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
 
@@ -68,6 +61,8 @@ class Maze:
             print("")
 
     def save(self, filename):
+        if not filename:
+            return
         f = open(filename, 'w')
         f.write(str(self.size) + "\n")
         for i in range(self.size):

@@ -132,4 +132,5 @@ def kruskal(grid, size):
                 for c in range(size):
                     if set[r][c] == max:
                         set[r][c] = min
+        #print str(i) + '/' + str(len(edge))
     return grid

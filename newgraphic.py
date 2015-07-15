@@ -287,7 +287,7 @@ class GUI:
         self.shortestPath.set(shortestPathString)
 
     def saveGrid(self):
-        filename = tkfd.askopenfilename(filetypes=[('txt files', '.txt'), ('all files', '.*')], defaultextension='.txt')
+        filename = tkfd.asksaveasfilename(filetypes=[('txt files', '.txt'), ('all files', '.*')], defaultextension='.txt')
         self.maze.save(filename)
 
     def loadGrid(self):
