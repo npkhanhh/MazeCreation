@@ -2,7 +2,7 @@ import math as m
 
 def findNearSquaredNumber(n):
     if m.sqrt(n).is_integer():
-        return n
+        return int(m.sqrt(n))
     bigger = n+1
     smaller = n-1
     while True:
