@@ -4,11 +4,11 @@ import solveAlgorithm as sa
 import sys
 
 class Maze:
-    def __init__(self, size, algo='Backtracker'):
+    def __init__(self, size=50, algo='Backtracker'):
         self.size = size
         self.create(algo, size)
         self.start = [0, 0]
-        self.end = [size-1, size-1]
+        self.goal = [size-1, size-1]
 
     def create(self, algo, size):
         self.size = size
@@ -64,7 +64,8 @@ class Maze:
         if not filename:
             return
         f = open(filename, 'w')
-        f.write(str(self.size) + "\n")
+        f.write(str(self.size) + " " + str(self.start[0]) + " " + str(self.start[1]) + " " + str(self.goal[0])
+                + " " + str(self.goal[1]) + "\n")
         for i in range(self.size):
             for j in range(self.size):
                 f.write(str(self.grid[i][j].top))
@@ -76,7 +77,13 @@ class Maze:
 
     def load(self, filename):
         f = open(filename, 'r')
-        self.size = int(f.readline())
+        info = f.readline().split
+        self.size = info[0]
+        self.start = [info[1], info[2]]
+        self.goal = [info[3], info[4]]
+        print(self.size)
+        print(self.start)
+        print(self.goal)
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
         for i in range(self.size):
             s = f.readline()
