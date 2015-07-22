@@ -1,5 +1,6 @@
 __author__ = 'Khanh'
 import random
+import timeit
 
 ###################################### Recursive Backtracker ##############################################
 
@@ -89,6 +90,7 @@ def backtracker(grid, size):
 ###################################### Kruskal algorithm ##############################################
 
 def kruskal(grid, size):
+    tic = timeit.default_timer()
     set = [[0 for i in range(size)] for j in range(size)]
     edge = []
     index = 0
@@ -132,5 +134,8 @@ def kruskal(grid, size):
                 for c in range(size):
                     if set[r][c] == max:
                         set[r][c] = min
-        print str(i) + '/' + str(len(edge))
+                #set[r] = [min if w==max else w for w in set[r]]
+        #print str(i) + '/' + str(len(edge))
+    toc = timeit.default_timer()
+    print(toc-tic)
     return grid

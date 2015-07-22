@@ -77,13 +77,10 @@ class Maze:
 
     def load(self, filename):
         f = open(filename, 'r')
-        info = f.readline().split
-        self.size = info[0]
-        self.start = [info[1], info[2]]
-        self.goal = [info[3], info[4]]
-        print(self.size)
-        print(self.start)
-        print(self.goal)
+        info = f.readline().split()
+        self.size = int(info[0])
+        self.start = [int(info[1]), int(info[2])]
+        self.goal = [int(info[3]), int(info[4])]
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
         for i in range(self.size):
             s = f.readline()
