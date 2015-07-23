@@ -1,5 +1,5 @@
 from FindSolution import FindSolution
-from RegionSolver_FW import RegionSolver_FW
+from RegionSolverNew import RegionSolverNew
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -168,7 +168,7 @@ class GUI:
         threads = []
         for i in range(nRegion):
             for j in range(nRegion):
-                regSolver = RegionSolver_FW(self.maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, self.regionMap, self.deMap, lock)
+                regSolver = RegionSolverNew(self.maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, self.regionMap, self.deMap, lock)
                 threads.append(regSolver)
                 regSolver.start()
         
