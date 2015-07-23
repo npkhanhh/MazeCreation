@@ -103,8 +103,8 @@ class GUI:
         self.zoomText = tk.Label(self.master, textvariable=self.zoomString)
         self.sizeText = tk.Label(self.master, textvariable=self.sizeString)
 
-        #self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
-        #self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
+        self.canvas.bind("<Button-1>", lambda event, arg="remove": self.editWall(event, arg))
+        self.canvas.bind("<Button-3>", lambda event, arg="add": self.editWall(event, arg))
         self.canvas.bind("<Control-1>", self.setStart)
         self.canvas.bind("<Control-3>", self.setGoal)
         self.xscrollbar.grid(row=1, column=0, sticky=tk.E+tk.W)
@@ -356,18 +356,18 @@ class GUI:
         else:
             action = 1
         if r > 0 and pos == 0:
-            self.grid[r][c].top = action
-            self.grid[r-1][c].bottom = action
-        elif c < self.size - 1  and pos == 1:
-            self.grid[r][c].right = action
-            self.grid[r][c+1].left = action
-        elif r<self.size-1 and pos == 2:
-            self.grid[r][c].bottom = action
-            self.grid[r+1][c].top = action
-        elif c<self.size-1 and pos == 3:
-            self.grid[r][c].left = action
-            self.grid[r][c-1].right = action
-        self.resetGrid()
+            self.maze.grid[r][c].top = action
+            self.maze.grid[r-1][c].bottom = action
+        elif c < self.maze.size - 1  and pos == 1:
+            self.maze.grid[r][c].right = action
+            self.maze.grid[r][c+1].left = action
+        elif r<self.maze.size-1 and pos == 2:
+            self.maze.grid[r][c].bottom = action
+            self.maze.grid[r+1][c].top = action
+        elif c<self.maze.size-1 and pos == 3:
+            self.maze.grid[r][c].left = action
+            self.maze.grid[r][c-1].right = action
+        self.maze.resetGrid()
         self.draw()
 
     def zoomIn(self):
