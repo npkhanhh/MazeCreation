@@ -4,27 +4,20 @@ import solveAlgorithm as sa
 import sys
 
 class Maze:
-    def __init__(self, size):
+    def __init__(self, size=50, algo='Backtracker'):
         self.size = size
-        # self.cellWidth = (w - 20)/size
-        # self.cellHeight = (h - 20)/size
-        self.de = []
-        self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
-        self.no_path = 0
-        self.path_list=[]
-        self.marked=[]
-        self.shortestPathLength = self.size*self.size+1
+        self.create(algo, size)
         self.start = [0, 0]
-        self.end = [size-1, size-1]
+        self.goal = [size-1, size-1]
 
     def create(self, algo, size):
         self.size = size
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
-        if algo == 'Recursive Backtracker':
+        if algo == 'Recursive Backtracker' or algo == 0:
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
-        elif algo == 'Backtracker':
+        elif algo == 'Backtracker' or algo == 1:
             self.grid = ca.backtracker(self.grid, self.size)
-        elif algo == 'Kruskal':
+        elif algo == 'Kruskal' or algo == 2:
             self.grid = ca.kruskal(self.grid, self.size)
         self.resetGrid()
 
@@ -68,8 +61,11 @@ class Maze:
             print("")
 
     def save(self, filename):
+        if not filename:
+            return
         f = open(filename, 'w')
-        f.write(str(self.size) + "\n")
+        f.write(str(self.size) + " " + str(self.start[0]) + " " + str(self.start[1]) + " " + str(self.goal[0])
+                + " " + str(self.goal[1]) + "\n")
         for i in range(self.size):
             for j in range(self.size):
                 f.write(str(self.grid[i][j].top))
@@ -81,7 +77,10 @@ class Maze:
 
     def load(self, filename):
         f = open(filename, 'r')
-        self.size = int(f.readline())
+        info = f.readline().split()
+        self.size = int(info[0])
+        self.start = [int(info[1]), int(info[2])]
+        self.goal = [int(info[3]), int(info[4])]
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
         for i in range(self.size):
             s = f.readline()

@@ -1,5 +1,6 @@
 __author__ = 'Khanh'
 import random
+import timeit
 
 ###################################### Recursive Backtracker ##############################################
 
@@ -40,6 +41,8 @@ def carvePath(r, c, grid, visited, size):
 ###################################### Backtracker algorithm ##############################################
 
 def backtracker(grid, size):
+    f = open('timecreate.txt', 'a')
+    #tic = timeit.default_timer()
     visited = [[0 for i in range(size)] for j in range(size)]
     r = random.randint(0, size-1)
     c = random.randint(0, size-1)
@@ -83,12 +86,16 @@ def backtracker(grid, size):
                         visited[r][c-1] = 1
                         pathstack.append([r, c-1])
                         break
+    #toc = timeit.default_timer()
+    #f.write('Backtracking'+ str(size) + str(toc-tic))
     return grid
 
 
 ###################################### Kruskal algorithm ##############################################
 
 def kruskal(grid, size):
+    f = open('timecreate.txt', 'a')
+    #tic = timeit.default_timer()
     set = [[0 for i in range(size)] for j in range(size)]
     edge = []
     index = 0
@@ -132,4 +139,8 @@ def kruskal(grid, size):
                 for c in range(size):
                     if set[r][c] == max:
                         set[r][c] = min
+                #set[r] = [min if w==max else w for w in set[r]]
+        #print str(i) + '/' + str(len(edge))
+    #toc = timeit.default_timer()
+    #f.write('Kruskal'+ str(size) + str(toc-tic))
     return grid

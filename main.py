@@ -1,5 +1,4 @@
 __author__ = 'Khanh'
-import graphic as g
 import newgraphic as ng
 import Maze as m
 import sys
