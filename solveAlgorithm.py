@@ -35,16 +35,54 @@ def dfsIterative(grid, size):
     path_list = []
     path = [[0, 0]]
     stack = [[0, 0]]
-    visited_from = [[[-1] for i in range(size)] for j in range(size)]
-    while stack:
-        cell = stack.pop(-1)
-        r = cell[0]
-        c = cell[1]
-        if grid[r][c].top == 0 and path.count([r-1, c]) != 1:
+    visited = [[0 for i in range(size)] for j in range(size)]
+    r = 0
+    c = 0
+    visited[0][0] = 1
+    while path:
+        move = False
+        if grid[r][c].top == 0 and visited[r-1][c] != 1:
             path.append([r-1, c])
+            visited[r-1][c] = 1
+            move = True
+            r = r - 1
             if r==size-1 and c == size-1:
                 pathtemp = copy.deepcopy(path)
                 path_list.append(pathtemp)
+                return path_list
+        elif grid[r][c].right == 0 and visited[r][c+1] != 1:
+            path.append([r, c+1])
+            visited[r][c+1] = 1
+            move = True
+            c = c + 1
+            if r==size-1 and c == size-1:
+                pathtemp = copy.deepcopy(path)
+                path_list.append(pathtemp)
+                return path_list
+
+        elif grid[r][c].bottom == 0 and visited[r+1][c] != 1:
+            path.append([r+1, c])
+            visited[r+1][c] = 1
+            move = True
+            r = r + 1
+            if r==size-1 and c == size-1:
+                pathtemp = copy.deepcopy(path)
+                path_list.append(pathtemp)
+                return path_list
+        elif grid[r][c].left == 0 and visited[r][c-1] != 1:
+            path.append([r, c-1])
+            visited[r][c-1] = 1
+            move = True
+            c = c - 1
+            if r==size-1 and c == size-1:
+                pathtemp = copy.deepcopy(path)
+                path_list.append(pathtemp)
+                return path_list
+        if not move:
+            del path[-1]
+            if path:
+                r = path[-1][0]
+                c = path[-1][1]
     return path_list
 
 def dfsMarker(grid, size):

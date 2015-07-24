@@ -40,7 +40,7 @@ class Maze:
 
 
     def solve(self):
-        self.path_list = sa.dfs(self.grid, self.size)
+        self.path_list = sa.dfsIterative(self.grid, self.size)
         self.no_path = len(self.path_list)
         for i in range(len(self.path_list)):
             if len(self.path_list[i]) < self.shortestPathLength:
