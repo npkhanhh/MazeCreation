@@ -1,6 +1,6 @@
 from FindSolution import FindSolution
-from RegionSolver_FW import RegionSolver_FW
-#from FloydWarshallImpl import FloydWarshallImpl
+#from RegionSolver_FW import RegionSolver_FW
+from FloydWarshallImpl import FloydWarshallImpl
 __author__ = 'Khanh'
 try:
     import Tkinter as tk

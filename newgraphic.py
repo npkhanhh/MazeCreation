@@ -1,5 +1,5 @@
 from FindSolution import FindSolution
-from RegionSolver_FW import RegionSolver_FW
+from RegionSolverNew import RegionSolverNew
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -149,7 +149,7 @@ class GUI:
     
         
 
-    def doHuysStuff(self):
+    def ConstructLists(self):
         # TODO: use bots to explore maze 
         ########## Explore ##########
         nRegion = 2
@@ -169,12 +169,12 @@ class GUI:
         print(self.regionMap)"""
         #############################################################################################
         #self.setupTest1()
-        deMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
+        self.deMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         lock = threading.Lock()
         threads = []
         for i in range(nRegion):
             for j in range(nRegion):
-                regSolver = RegionSolver_FW(self.maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, self.regionMap, deMap, lock)
+                regSolver = RegionSolverNew(self.maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, self.regionMap, self.deMap, lock)
                 threads.append(regSolver)
                 regSolver.start()
         
@@ -184,7 +184,7 @@ class GUI:
         print "Path Map\n"
         print(self.regionMap)
         print "\nDeadend Map\n"
-        print(deMap)
+        print(self.deMap)
         
         #fw = FloydWarshallImpl(self.regionMap, deMap, nRegion)
 
@@ -204,13 +204,14 @@ class GUI:
         self.updateInfo()
 
         
-        self.doHuysStuff()
+        self.ConstructLists()
         self.draw()
 
 
     def solveMaze(self):
-        #nRegion = 2
-        #FindSolution(self.maze.grid, self.regionMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+
+        nRegion = 2
+        FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
         self.maze.solve()
         self.draw()
         self.noPath.set(noPathString + str(self.maze.no_path))
@@ -313,6 +314,7 @@ class GUI:
             self.cellHeight = defaultCellsize
         self.updateInfo()
         self.draw()
+        self.ConstructLists()
 
     def drawDeadend(self):
         for i in range(self.maze.no_de):
