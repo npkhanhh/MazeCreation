@@ -97,7 +97,7 @@ class botHelper:
         #for i in range(self.no_bot):
         #    print paths[i]
         toc = timeit.default_timer()
-        f.write(str(self.no_bot) + ' ' + str(self.mode) + ' ' + str(toc-tic) + '\n')
+        f.write(str(size) + ' ' + str(self.mode) + ' ' + str(toc-tic) + '\n')
         count = 0
         for i in range(size):
             for j in range(size):

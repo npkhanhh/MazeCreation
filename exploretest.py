@@ -2,17 +2,19 @@ import botHelper as bh
 import Maze as m
 
 no_bot = [2, 5, 10, 20]
+mazeSize = [10, 20, 50, 100, 200, 500]
 algo = ['Backtracker', 'Kruskal']
-numberOfFile = 5
+numberOfDrop = 5
 
 maze = m.Maze()
-maze.load('TestMazes\\test' + '-' + str(100) + '-' + str(algo[0]) + '-' + str(0) + '.txt')
 
-for nb in no_bot:
-    for i in range(numberOfFile):
-        bots = bh.botHelper(nb, maze, 'Region')
+for ms in mazeSize:
+    maze.load('TestMazes\\test' + '-' + str(ms) + '-' + str(algo[0]) + '-' + str(0) + '.txt')
+    for i in range(numberOfDrop):
+        bots = bh.botHelper(5, maze, 'Region')
         bots.runBot()
 
-        bots = bh.botHelper(nb, maze, 'Random')
+    for i in range(numberOfDrop):
+        bots = bh.botHelper(5, maze, 'Random')
         bots.runBot()
 

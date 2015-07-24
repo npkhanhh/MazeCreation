@@ -206,24 +206,24 @@ class GUI:
         self.updateInfo()
 
         
-        self.ConstructLists()
+        #self.ConstructLists()
         self.draw()
-        self.drawRegionMap()
-        self.drawDeadendPath()
-        self.drawGrid(self.maze)
+        #self.drawRegionMap()
+        #self.drawDeadendPath()
+        #self.drawGrid(self.maze)
 
 
     def solveMaze(self):
 
-        nRegion = 2
-        FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
-        #self.maze.solve()
-        #self.draw()
-        #self.noPath.set(noPathString + str(self.maze.no_path))
-        #if self.maze.no_path != 0:
-            #self.shortestPath.set(shortestPathString + str(self.maze.shortestPathLength))
-        #else:
-            #self.shortestPath.set(shortestPathString)
+        #nRegion = 2
+        #FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        self.maze.solve()
+        self.draw()
+        self.noPath.set(noPathString + str(self.maze.no_path))
+        if self.maze.no_path != 0:
+            self.shortestPath.set(shortestPathString + str(self.maze.shortestPathLength))
+        else:
+            self.shortestPath.set(shortestPathString)
 
     def drawDeadendPath(self):
         for i in range(len(self.deMap)):
@@ -286,11 +286,11 @@ class GUI:
             self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill=color, outline=color)
 
 
-    def drawRegionMap(self):
-        for i in range(len(self.regionMap)):
-            for j in range(len(self.regionMap[i])):
-                for k in range(len(self.regionMap[i][j])):
-                        self.drawPath(self.regionMap[i][j][k], 'green')
+    # def drawRegionMap(self):
+    #     for i in range(len(self.regionMap)):
+    #         for j in range(len(self.regionMap[i])):
+    #             for k in range(len(self.regionMap[i][j])):
+    #                     self.drawPath(self.regionMap[i][j][k], 'green')
 
     def divide(self):
         self.maze.divide()
