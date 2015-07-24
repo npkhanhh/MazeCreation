@@ -209,8 +209,8 @@ class GUI:
 
 
     def solveMaze(self):
-        nRegion = 2
-        FindSolution(self.maze.grid, self.regionMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        #nRegion = 2
+        #FindSolution(self.maze.grid, self.regionMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
         self.maze.solve()
         self.draw()
         self.noPath.set(noPathString + str(self.maze.no_path))
