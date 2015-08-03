@@ -10,7 +10,7 @@ class RegionSolver(threading.Thread):
     Run as a single thread, solve one specified region and save the result to the parameter 'regionMap'
     """
 
-    def __init__(self, grid, top, left, right, bottom, xRegionMap, yRegionMap, regionMap, regionMapLock):
+    def __init__(self, grid, top, left, right, bottom, xRegionMap, yRegionMap, pathMap, regionMapLock):
         threading.Thread.__init__(self)
         self.grid = grid
         self.top = top
@@ -19,7 +19,7 @@ class RegionSolver(threading.Thread):
         self.bottom = bottom
         self.xRegionMap = xRegionMap
         self.yRegionMap = yRegionMap
-        self.regionMap = regionMap
+        self.regionMap = pathMap
         self.regionMapLock = regionMapLock
         
         

@@ -46,40 +46,61 @@ class PathConnectorNew(threading.Thread):
         self.traversedDes = []
         self.solution = solution
         
+        self.isGoalInDeadend = False
+        self.doesGoalNodeHaveEntrance = True
+        self.goalNode = []
+        
     def run(self):
         threading.Thread.run(self)
         # Find the path that starting cell belongs to
         xRegion = self.startCell[0]/self.regionSize
         yRegion = self.startCell[1]/self.regionSize
-        solutionNodes = []
+        traversedNodes = []
         
-        top, left, bottom, right = self.getBoundary(xRegion, yRegion)
+        # Look for the deadend where goal lies in
+        xRegGoal = self.goalCell[0]/self.regionSize
+        yRegGoal = self.goalCell[1]/self.regionSize
+        for i in range(len(self.deMap[xRegGoal][yRegGoal])):
+            de = self.deMap[xRegGoal][yRegGoal][i]
+            if self.goalCell in de:
+                self.isGoalInDeadend = True
+                self.goalNode = [xRegGoal, yRegGoal, 0, i]
+                if not self.hasEntrance(self.grid, [xRegGoal, yRegGoal], de[0], []):
+                    self.doesGoalNodeHaveEntrance = False
+                break            
+        
         # Find the deadend that starting cell belongs to
         for i in range(len(self.deMap[xRegion][yRegion])):
             de = self.deMap[xRegion][yRegion][i]
             if self.startCell in de:
                 if self.goalCell in de:
-                    self.solution = [de]
-                    # TODO: extract the subpath
+                    traversedNodes.append([xRegion, yRegion, 0, i])
+                    self.solution[:] = self.processRawSolution(traversedNodes)[:]
+                    return
                 else:
-                    traversedDEs = []
-                    traversedDEs.append([xRegion, yRegion, i])
-                    solutionNodes.append(de)
+                    traversedNodes.append([xRegion, yRegion, 0, i])
                     end = de[0]    # deadends have only one opened end
+                    if self.isGoalInDeadend and xRegGoal == xRegion and yRegGoal == yRegion:
+                        if self.isConnected(de, self.deMap[xRegGoal][yRegGoal][self.goalNode[3]], [], True):
+                            traversedNodes.append(self.goalNode)
+                            self.solution[:] = self.processRawSolution(traversedNodes)[:]
+                            return
                     pathsInRegion = self.pathMap[xRegion][yRegion]
                     for j in range(len(pathsInRegion)):
                         p = pathsInRegion[j]
-                        if self.isConnected(de, p, []): # this means the starting cell is in a deadend whose opened end is inside the current region
-                            foundSolution = self.findShortestSolution([end], self.goalCell, [xRegion, yRegion], solutionNodes, [], traversedDEs)
-                            if len(foundSolution) > 0:
-                                self.solution = foundSolution
-                                print self.solution
-                                return
-                        else:
-                            directions = self.cellIsAt(end, xRegion, yRegion)
+                        ends = [end]
+                        if self.isConnected([de[0]], p, [], True): # this means the starting cell is in a deadend whose opened end is inside the current region
+                            traversedNodes.append([xRegion, yRegion, 1, j])
+                            if len(p) == 1:
+                                ends = [p[0]]
+                            else:
+                                ends = [p[0], p[-1]]
+                        
+                        for e in ends:
+                            directions = self.cellIsAt(e, xRegion, yRegion)
                             for d in directions:
                                 nextRegionCoordinate = [-1, -1]
-                                if  d == "top" and xRegion-1 >= 0:
+                                if d == "top" and xRegion-1 >= 0:
                                     nextRegionCoordinate = [xRegion-1, yRegion]
                                 elif d == 'bottom' and xRegion+1 < self.nRegion:
                                     nextRegionCoordinate = [xRegion+1, yRegion]
@@ -87,22 +108,27 @@ class PathConnectorNew(threading.Thread):
                                     nextRegionCoordinate = [xRegion, yRegion-1]
                                 elif d == 'right' and yRegion+1 < self.nRegion:
                                     nextRegionCoordinate = [xRegion, yRegion+1]
-                                foundSolution = self.findShortestSolution([end], self.goalCell, nextRegionCoordinate, solutionNodes, [], traversedDEs)
+                                foundSolution = self.findShortestSolution([e], self.goalCell, nextRegionCoordinate, traversedNodes)
                                 if len(foundSolution) > 0:
-                                    self.solution = foundSolution
-                                    print self.solution
+                                    self.solution[:] = self.processRawSolution(foundSolution)[:]
                                     return
                             
         for i in range(len(self.pathMap[xRegion][yRegion])):
             p = self.pathMap[xRegion][yRegion][i]
             if self.startCell in p:
                 if self.goalCell in p:
-                    self.solution = [p]
-                    # TODO: extract the subpath
+                    traversedNodes.append([xRegion, yRegion, 1, i])
+                    self.solution[:] = self.processRawSolution(traversedNodes)[:]
+                    return
                 else:
-                    traversedPaths = []
-                    traversedPaths.append([xRegion, yRegion, i])
-                    solutionNodes.append(p)
+                    if self.isGoalInDeadend and not self.doesGoalNodeHaveEntrance and self.goalNode[0] == xRegion and self.goalNode[1] == yRegion:
+                        de = self.deMap[xRegion][yRegion][self.goalNode[3]]
+                        if self.isConnected(p, de, [], True):
+                            traversedNodes.append([xRegion, yRegion, 1, i])
+                            traversedNodes.append(self.goalNode)
+                            self.solution[:] = self.processRawSolution(traversedNodes)[:]
+                            return
+                    traversedNodes.append([xRegion, yRegion, 1, i])
                     ends = [p[0], p[-1]]
                     for end in ends:
                         directions = self.cellIsAt(end, xRegion, yRegion)
@@ -116,17 +142,16 @@ class PathConnectorNew(threading.Thread):
                                 nextRegionCoordinate = [xRegion, yRegion-1]
                             elif d == 'right' and yRegion+1 < self.nRegion:
                                 nextRegionCoordinate = [xRegion, yRegion+1]
-                            foundSolution = self.findShortestSolution([end], self.goalCell, nextRegionCoordinate, solutionNodes, traversedPaths, [])
+                            foundSolution = self.findShortestSolution([end], self.goalCell, nextRegionCoordinate, traversedNodes)
                             if len(foundSolution) > 0:
                                 self.solution = foundSolution
-                                print self.solution
+                                self.solution[:] = self.processRawSolution(foundSolution)[:]
                                 return
         
         
-                        
 
 
-    def findShortestSolution(self, previousNode, goal, regionCoor, solutionNodes, traversedPaths, traversedDEs):
+    def findShortestSolution(self, previousNode, goal, regionCoor, traversedNodes):
         """
         Find the shortest path that lead to the ending cell
         Params:
@@ -134,11 +159,7 @@ class PathConnectorNew(threading.Thread):
             goal: the ending cell
             regionCoor: the coordinate of the current region in the region map
             path: the traversed path
-            solutionNodes: the list that contain all the traversed paths/deadend
-            traversedPaths: list of coordinates of traversed paths [xRegion, yRegion, index of path in self.pathMap[xRegion][yRegion]]
-            traversedDEs: list of coordinates of traversed deadends [xRegion, yRegion, index of deadend in self.deMap[xRegion][yRegion]]
-#             explorePaths: the list of explored paths
-#             exploredDEs: the list of explored deadends
+            traversedNodes: list of coordinates of traversed node (paths, deadends): [xRegion, yRegion, type of node (0 for deadend and 1 for path), index of node in self.pathNap of deMap]
         Return:
             A list of paths/deadend that make up the solution
         """
@@ -148,91 +169,134 @@ class PathConnectorNew(threading.Thread):
         
         deInRegion = self.deMap[xRegion][yRegion]
         pathsInRegion = self.pathMap[xRegion][yRegion]
-        for i in range(len(deInRegion)):
-            de = deInRegion[i]
-            if goal in de:
-#                 if [xRegion, yRegion, i] not in self.traversedDes and self.isConnected(previousNode, de):
-                if [xRegion, yRegion, i] not in self.traversedDes and self.hasEntrance(self.grid, regionCoor, de[0], []):
-                    if self.isConnected(previousNode, de, []):
-                        newTraversedDes = list(traversedDEs)
-                        newTraversedDes.append([xRegion, yRegion, i])
-                        newSolutionNodes = list(solutionNodes)
-                        newSolutionNodes.append(de)
-                        return newSolutionNodes
-#                 elif [xRegion, yRegion, i] not in self.traversedDes and not self.isConnected(previousNode, de):
-                elif [xRegion, yRegion, i] not in self.traversedDes and not self.hasEntrance(self.grid, regionCoor, de[0], []):
-                    # The goal is in a deadend whose opened end is not an entrance. 
-                    # Thus we have to look through the list of paths to find the path that connects this deadend and the previous node
-                    ends = [de[0]]
-                    for j in range(len(pathsInRegion)):
-                        p = pathsInRegion[j]
-                        if [xRegion, yRegion, i] not in traversedPaths and self.isConnected(previousNode, p, []) and self.isConnected(ends, p, []):
-                            solutionNodes.append(p)
-                            solutionNodes.append(de)
-                            return solutionNodes
+        if self.isGoalInDeadend and regionCoor[0] == self.goalNode[0] and regionCoor[1] == self.goalNode[1]:  # If the current region has goal cell
+            for i in range(len(deInRegion)):
+                de = deInRegion[i]
+                if goal in de:
+                    if [xRegion, yRegion, 0, i] not in traversedNodes and self.hasEntrance(self.grid, regionCoor, de[0], []):
+                        if self.isConnected(previousNode, [de[0]], [], False):
+                            traversedNodes.append([xRegion, yRegion, 0, i])
+                            return traversedNodes
+                    elif [xRegion, yRegion, 0, i] not in traversedNodes and not self.hasEntrance(self.grid, regionCoor, de[0], []):
+                        # The goal is in a deadend whose opened end is not an entrance. 
+                        # Thus we have to look through the list of paths to find the path that connects this deadend and the previous node
+                        ends = [de[0]]
+                        for j in range(len(pathsInRegion)):
+                            p = pathsInRegion[j]
+                            if [xRegion, yRegion, 1, j] not in traversedNodes and self.isConnected(previousNode, p, [], False) and self.isConnected(ends, p, [], True):
+                                traversedNodes.append([xRegion, yRegion, 1, j])
+                                traversedNodes.append([xRegion, yRegion, 0, i])
+                                return traversedNodes
                     
         for i in range(len(pathsInRegion)):
             p = pathsInRegion[i]
-            atCell = [-1, -1]
-            if [xRegion, yRegion, i] not in traversedPaths and self.isConnected(previousNode, p, atCell):
-                newTraversedPaths = list(traversedPaths)
-                newTraversedPaths.append([xRegion, yRegion, i])
-                newSolutionNodes = list(solutionNodes)
-                newSolutionNodes.append(p)
+            if [xRegion, yRegion, 1, i] not in traversedNodes and self.isConnected(previousNode, p, [], False):
+                newTraversedNodes = list(traversedNodes)
+                newTraversedNodes.append([xRegion, yRegion, 1, i])
                 if goal in p:
-                    return newSolutionNodes
+                    return newTraversedNodes
                 else:
+                    if self.isGoalInDeadend and not self.doesGoalNodeHaveEntrance and self.goalNode[0] == xRegion and self.goalNode[1] == yRegion:
+                        de = self.deMap[xRegion][yRegion][self.goalNode[3]]
+                        if self.isConnected(p, [de[0]], [], True):
+                            traversedNodes.append(self.goalNode)
+                            self.solution = traversedNodes
+                            self.trimPaths(self.solution)
+                            return
                     # Check neighbor regions at both ends of this path
                     ends = [p[0], p[-1]]
                     for end in ends:
-                        if len(p) > 1 and end == atCell:
-                            continue
-                        else:
-                            directions = self.cellIsAt(end, xRegion, yRegion)
-                            for d in directions:
-                                nextRegionCoordinate = [-1, -1]
-                                if  d == "top" and xRegion-1 >= 0:
-                                    nextRegionCoordinate = [xRegion-1, yRegion]
-                                elif d == 'bottom' and xRegion+1 < self.nRegion:
-                                    nextRegionCoordinate = [xRegion+1, yRegion]
-                                elif d == 'left' and yRegion-1 >= 0:
-                                    nextRegionCoordinate = [xRegion, yRegion-1]
-                                elif d == 'right' and yRegion+1 < self.nRegion:
-                                    nextRegionCoordinate = [xRegion, yRegion+1]
-                                foundSolution = self.findShortestSolution([end], goal, nextRegionCoordinate, newSolutionNodes, newTraversedPaths, traversedDEs)
-                                if len(foundSolution) > 0:
-                                    return foundSolution
+                        directions = self.cellIsAt(end, xRegion, yRegion)
+                        for d in directions:
+                            nextRegionCoordinate = [-1, -1]
+                            if  d == "top" and xRegion-1 >= 0 and [end[0]-1, end[1]] != previousNode:
+                                nextRegionCoordinate = [xRegion-1, yRegion]
+                            elif d == 'bottom' and xRegion+1 < self.nRegion and [end[0]+1, end[1]] != previousNode:
+                                nextRegionCoordinate = [xRegion+1, yRegion]
+                            elif d == 'left' and yRegion-1 >= 0 and [end[0], end[1]-1] != previousNode:
+                                nextRegionCoordinate = [xRegion, yRegion-1]
+                            elif d == 'right' and yRegion+1 < self.nRegion and [end[0], end[1]+1] != previousNode:
+                                nextRegionCoordinate = [xRegion, yRegion+1]
+                            foundSolution = self.findShortestSolution([end], goal, nextRegionCoordinate, newTraversedNodes)
+                            if len(foundSolution) > 0:
+                                return foundSolution
         
         return []
         
-    def isConnected(self, p1, p2, atCell):
+    def isConnected(self, p1, p2, atCells, bruteForce):
         """
         Check if 2 paths are connected
         Params:
             p1, p2: 2 paths
             atCell: the cell in p2 where 2 paths connect
+            bruteForce: If True, scan through the paths to find the intersection
+                        If False, only check the 2 ends of the paths
         """
-        for i in range(len(p1)):
-            c1 = p1[i]
-            for j in range(len(p2)):
-                c2 = p2[j]
-                atCell[:] = c2[:]
-                if c1 == c2:
-                    return True
-                if c1[0] == c2[0]:
-                    if c1[1] == c2[1]-1:
-                        if self.grid[c1[0]][c1[1]].right == 0 and self.grid[c2[0]][c2[1]].left == 0:
+        if bruteForce:
+            hasCommonSubpath = False
+            #for i in range(len(p1)):
+            i = 0
+            while i < len(p1):
+                c1 = p1[i]
+                #for j in range(len(p2)):
+                j = 0
+                while j < len(p2):
+                    c2 = p2[j]
+                    if c1 == c2:
+                        hasCommonSubpath = True
+                        if i+1<len(p1):
+                            i = i + 1
+                            j = j + 1
+                            c1 = p1[i]
+                            l = list([c1, c2])
+                            atCells[:] = l[:]
+                            continue
+                        break
+                    else:
+                        if hasCommonSubpath:
                             return True
-                    elif c1[1] == c2[1]+1:
-                        if self.grid[c1[0]][c1[1]].left == 0 and self.grid[c2[0]][c2[1]].right == 0:
-                            return True
-                elif c1[1] == c2[1]:
-                    if c1[0] == c2[0]-1:
-                        if self.grid[c1[0]][c1[1]].bottom == 0 and self.grid[c2[0]][c2[1]].top == 0:
-                            return True
-                    elif c1[0] == c2[0]+1:
-                        if self.grid[c1[0]][c1[1]].top == 0 and self.grid[c2[0]][c2[1]].bottom == 0:
-                            return True
+                        else:
+                            l = list([c1, c2])
+                            atCells[:] = l[:]
+                            if c1[0] == c2[0]:
+                                if c1[1] == c2[1]-1:
+                                    if self.grid[c1[0]][c1[1]].right == 0 and self.grid[c2[0]][c2[1]].left == 0:
+                                        return True
+                                elif c1[1] == c2[1]+1:
+                                    if self.grid[c1[0]][c1[1]].left == 0 and self.grid[c2[0]][c2[1]].right == 0:
+                                        return True
+                            elif c1[1] == c2[1]:
+                                if c1[0] == c2[0]-1:
+                                    if self.grid[c1[0]][c1[1]].bottom == 0 and self.grid[c2[0]][c2[1]].top == 0:
+                                        return True
+                                elif c1[0] == c2[0]+1:
+                                    if self.grid[c1[0]][c1[1]].top == 0 and self.grid[c2[0]][c2[1]].bottom == 0:
+                                        return True
+                    j = j + 1
+                i = i + 1
+        else:
+            ends1 = [p1[0], p1[-1]]
+            ends2 = [p2[0], p2[-1]]
+            for e1 in ends1:
+                for e2 in ends2:
+                    l = list([e1, e2])
+                    atCells[:] = l[:]
+                    if e1 == e2:
+                        return True
+                    if e1[0] == e2[0]:
+                        if e1[1] == e2[1]-1:
+                            if self.grid[e1[0]][e1[1]].right == 0 and self.grid[e2[0]][e2[1]].left == 0:
+                                return True
+                        elif e1[1] == e2[1]+1:
+                            if self.grid[e1[0]][e1[1]].left == 0 and self.grid[e2[0]][e2[1]].right == 0:
+                                return True
+                    elif e1[1] == e2[1]:
+                        if e1[0] == e2[0]-1:
+                            if self.grid[e1[0]][e1[1]].bottom == 0 and self.grid[e2[0]][e2[1]].top == 0:
+                                return True
+                        elif e1[0] == e2[0]+1:
+                            if self.grid[e1[0]][e1[1]].top == 0 and self.grid[e2[0]][e2[1]].bottom == 0:
+                                return True
         return False
     
     def cellIsAt(self, cell, xRegion, yRegion):
@@ -302,3 +366,114 @@ class PathConnectorNew(threading.Thread):
             result = True
             directions.append('right')
         return result
+    
+    def trimPaths(self, traversedNodes):
+        """
+        Remove unnecessary cells in the nodes that make up the solution
+        Params:
+            traversedNodes: The list of nodes (paths, deadends) that make up the solution
+        Return:
+            The solution path
+        """
+        solution = []
+        
+        p = self.getNode(traversedNodes, 0)
+        if self.goalCell in p:
+            idx1, idx2 = -1, -1
+            try:
+                idx1 = p.index(self.startCell)
+                idx2 = p.index(self.goalCell)
+            except:
+                pass
+            if idx1 != -1 and idx2 != -1:
+                if idx2 <= idx1:
+                    p = list(reversed(p))
+                    l = len(p)
+                    solution = p[l-1-idx2:l-idx1]
+                else:
+                    solution = p[idx1:idx2+1]
+                return solution
+        else:
+            startIdx = -1
+            try:
+                startIdx = p.index(self.startCell)
+            except:
+                pass
+            if startIdx != -1:
+                for i in range(len(traversedNodes)):
+                    if i != 0:
+                        curPath = self.getNode(traversedNodes, i)
+                        atCells = []
+                        if traversedNodes[i][2] == 0 or traversedNodes[i-1][2] == 0:# and not self.doesGoalNodeHaveEntrance:   # curPath is a deadend whose opened end is not an entrance
+                            if self.isConnected(p, curPath, atCells, True):
+                                idx1, idx2 = -1, -1
+                                try:
+                                    idx1 = p.index(atCells[0])
+                                    idx2 = curPath.index(atCells[1])
+                                except:
+                                    pass
+                                subPath = self.getSubpath(p, startIdx, idx1)
+                                solution = solution + subPath
+                                p = curPath
+                                startIdx = idx2
+                        else:
+                            if self.isConnected(p, curPath, atCells, False):
+                                idx1, idx2 = -1, -1
+                                try:
+                                    idx1 = p.index(atCells[0])
+                                    idx2 = curPath.index(atCells[1])
+                                except:
+                                    pass
+                                subPath = self.getSubpath(p, startIdx, idx1)
+                                solution = solution + subPath
+                                p = curPath
+                                startIdx = idx2
+                goalIdx = -1
+                try:
+                    goalIdx = p.index(self.goalCell)
+                except:
+                    pass
+                if goalIdx != -1:
+                    subPath = self.getSubpath(p, startIdx, goalIdx)
+                    solution = solution + subPath
+                    
+            return solution
+            
+    def getNode(self, traversedNodes, index):
+        """
+        Return the path/deadend by index from traversedNodes when index is in range
+        Return None when index is out of range        
+        """
+        if index >= 0 and index < len(traversedNodes):
+            node = traversedNodes[index]
+            if node[2] == 0:
+                return self.deMap[node[0]][node[1]][node[3]]
+            else:
+                return self.pathMap[node[0]][node[1]][node[3]]
+        else:
+            return None
+        
+    def getSubpath(self, p, idx1, idx2):
+        result = []
+        if idx1 < 0 or idx2 <0 or idx1 >= len(p) or idx2 >= len(p):
+            return result
+        else:
+            if idx1 == idx2:
+                result = [p[idx1]]
+            elif idx1 > idx2:
+                result = list(reversed(p[idx2:idx1+1]))
+            else:
+                result = p[idx1:idx2+1]
+        return result
+    
+    def processRawSolution(self, rawSolution):
+        """
+        Params:
+            rawSolution: the list of traversedNodes that make up the solution. Each element of the list is [xRegion, yRegion, type_of_node, index_of_node_in_node_list]
+                        The node lists are self.deMap and self.pathMap
+        Return:
+            A path that is the solution
+        """
+        solution = self.trimPaths(rawSolution)
+        print solution
+        return solution

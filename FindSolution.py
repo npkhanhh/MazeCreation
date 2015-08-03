@@ -4,6 +4,8 @@ Created on Jul 7, 2015
 @author: ldhuy
 '''
 from PathConnectorNew import PathConnectorNew
+from PathConnector import PathConnector
+import time
 
 def FindSolution(grid, regionMap, deMap, nRegion, mazeSize, start, goal):
     """
@@ -17,13 +19,10 @@ def FindSolution(grid, regionMap, deMap, nRegion, mazeSize, start, goal):
         start: coordinate of the starting cell
         goal: coordinate of the ending cell
     """
-    regionSize = mazeSize / nRegion
-    xRegion = start[0]/regionSize
-    yRegion = start[1]/regionSize
     solution = [[]]
+    t0 = time.time()
     pathCnt = PathConnectorNew(grid, start, goal, regionMap, deMap, nRegion, mazeSize, solution)
     pathCnt.start()
     pathCnt.join()
-    print "\nFinish\n"
-    print solution
+    print "PathConnectorNew finished running in {0}s".format(time.time() - t0)
 

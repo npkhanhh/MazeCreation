@@ -14,14 +14,14 @@ class PathConnector(threading.Thread):
     """
 
 
-    def __init__(self, grid, startCell, goalCell, regionMap, xRegion, yRegion, nRegion, mazeSize):
+    def __init__(self, grid, startCell, goalCell, pathMap, xRegion, yRegion, nRegion, mazeSize):
         """
         Params:
             grid: the maze
             startCell: the coordinate of the cell this robot starts at [x, y]
             goalCell: the coordinate of the cell this robot needs to find path that leads to [x, y]
             xRegion, yRegion: the starting cell belong to a region, this region has the coordinate [xRegion, yRegion] in the region map
-            regionMap: the map of regions discovered by RegionSolver(s)
+            pathMap: the map of regions discovered by RegionSolver(s)
             nRegion: the program divides the maze into nRgion*nRegion regions to run RegionSolver(s)
         """
         threading.Thread.__init__(self)
@@ -30,7 +30,7 @@ class PathConnector(threading.Thread):
         self.goalCell = goalCell
         self.xRegion = xRegion
         self.yRegion = yRegion
-        self.regionMap = regionMap
+        self.regionMap = pathMap
         self.nRegion = nRegion
         self.mazeSize = mazeSize
         
@@ -380,7 +380,7 @@ class PathConnector(threading.Thread):
         Params:
             xRegion, yRegion: the coordinate of the region in region map
         Return:
-            an array: [top, bottom, left, right]
+            an array: [top, left, bottom, right]
         """
         regionSize = self.mazeSize / self.nRegion
         top = regionSize * xRegion

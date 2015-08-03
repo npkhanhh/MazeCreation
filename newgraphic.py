@@ -1,5 +1,6 @@
 from FindSolution import FindSolution
 from RegionSolverNew import RegionSolverNew
+import time
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -206,7 +207,7 @@ class GUI:
         self.updateInfo()
 
         
-        #self.ConstructLists()
+        self.ConstructLists()
         self.draw()
         #self.drawRegionMap()
         #self.drawDeadendPath()
@@ -215,8 +216,10 @@ class GUI:
 
     def solveMaze(self):
 
-        #nRegion = 2
-        #FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        nRegion = 2
+        startT = time.time()
+        FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        print time.time() - startT
         self.maze.solve()
         self.draw()
         self.noPath.set(noPathString + str(self.maze.no_path))
@@ -491,7 +494,7 @@ class GUI:
                             del self.paths[i][-1]
                             if not self.paths[i]:
                                 end[i] = True
-                    for i in range(4):
+                    for i in range(self.no_bot):
                         if not end[i]:
                             self.stop = False
                             break
