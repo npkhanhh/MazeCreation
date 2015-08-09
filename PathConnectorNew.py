@@ -85,33 +85,49 @@ class PathConnectorNew(threading.Thread):
                             traversedNodes.append(self.goalNode)
                             self.solution[:] = self.processRawSolution(traversedNodes)[:]
                             return
-                    pathsInRegion = self.pathMap[xRegion][yRegion]
-                    for j in range(len(pathsInRegion)):
-                        p = pathsInRegion[j]
-                        ends = [end]
-                        if self.isConnected([de[0]], p, [], True): # this means the starting cell is in a deadend whose opened end is inside the current region
-                            traversedNodes.append([xRegion, yRegion, 1, j])
-                            if len(p) == 1:
-                                ends = [p[0]]
-                            else:
-                                ends = [p[0], p[-1]]
-                        
-                        for e in ends:
-                            directions = self.cellIsAt(e, xRegion, yRegion)
-                            for d in directions:
-                                nextRegionCoordinate = [-1, -1]
-                                if d == "top" and xRegion-1 >= 0:
-                                    nextRegionCoordinate = [xRegion-1, yRegion]
-                                elif d == 'bottom' and xRegion+1 < self.nRegion:
-                                    nextRegionCoordinate = [xRegion+1, yRegion]
-                                elif d == 'left' and yRegion-1 >= 0:
-                                    nextRegionCoordinate = [xRegion, yRegion-1]
-                                elif d == 'right' and yRegion+1 < self.nRegion:
-                                    nextRegionCoordinate = [xRegion, yRegion+1]
-                                foundSolution = self.findShortestSolution([e], self.goalCell, nextRegionCoordinate, traversedNodes)
-                                if len(foundSolution) > 0:
-                                    self.solution[:] = self.processRawSolution(foundSolution)[:]
-                                    return
+                    if self.hasEntrance(self.grid, [xRegion, yRegion], end, []):
+                        directions = self.cellIsAt(end, xRegion, yRegion)
+                        for d in directions:
+                            nextRegionCoordinate = [-1, -1]
+                            if d == "top" and xRegion-1 >= 0:
+                                nextRegionCoordinate = [xRegion-1, yRegion]
+                            elif d == 'bottom' and xRegion+1 < self.nRegion:
+                                nextRegionCoordinate = [xRegion+1, yRegion]
+                            elif d == 'left' and yRegion-1 >= 0:
+                                nextRegionCoordinate = [xRegion, yRegion-1]
+                            elif d == 'right' and yRegion+1 < self.nRegion:
+                                nextRegionCoordinate = [xRegion, yRegion+1]
+                            foundSolution = self.findShortestSolution([end], self.goalCell, nextRegionCoordinate, traversedNodes)
+                            if len(foundSolution) > 0:
+                                self.solution[:] = self.processRawSolution(foundSolution)[:]
+                                return
+                    else:
+                        pathsInRegion = self.pathMap[xRegion][yRegion]
+                        for j in range(len(pathsInRegion)):
+                            p = pathsInRegion[j]
+                            ends = [end]
+                            if self.isConnected([de[0]], p, [], True): # this means the starting cell is in a deadend whose opened end is inside the current region
+                                traversedNodes.append([xRegion, yRegion, 1, j])
+                                if len(p) == 1:
+                                    ends = [p[0]]
+                                else:
+                                    ends = [p[0], p[-1]]
+                            for e in ends:
+                                directions = self.cellIsAt(e, xRegion, yRegion)
+                                for d in directions:
+                                    nextRegionCoordinate = [-1, -1]
+                                    if d == "top" and xRegion-1 >= 0:
+                                        nextRegionCoordinate = [xRegion-1, yRegion]
+                                    elif d == 'bottom' and xRegion+1 < self.nRegion:
+                                        nextRegionCoordinate = [xRegion+1, yRegion]
+                                    elif d == 'left' and yRegion-1 >= 0:
+                                        nextRegionCoordinate = [xRegion, yRegion-1]
+                                    elif d == 'right' and yRegion+1 < self.nRegion:
+                                        nextRegionCoordinate = [xRegion, yRegion+1]
+                                    foundSolution = self.findShortestSolution([e], self.goalCell, nextRegionCoordinate, traversedNodes)
+                                    if len(foundSolution) > 0:
+                                        self.solution[:] = self.processRawSolution(foundSolution)[:]
+                                        return
                             
         for i in range(len(self.pathMap[xRegion][yRegion])):
             p = self.pathMap[xRegion][yRegion][i]
@@ -144,7 +160,6 @@ class PathConnectorNew(threading.Thread):
                                 nextRegionCoordinate = [xRegion, yRegion+1]
                             foundSolution = self.findShortestSolution([end], self.goalCell, nextRegionCoordinate, traversedNodes)
                             if len(foundSolution) > 0:
-                                self.solution = foundSolution
                                 self.solution[:] = self.processRawSolution(foundSolution)[:]
                                 return
         
@@ -200,8 +215,7 @@ class PathConnectorNew(threading.Thread):
                         de = self.deMap[xRegion][yRegion][self.goalNode[3]]
                         if self.isConnected(p, [de[0]], [], True):
                             traversedNodes.append(self.goalNode)
-                            self.solution = traversedNodes
-                            self.trimPaths(self.solution)
+                            self.solution[:] = self.processRawSolution(traversedNodes)[:]
                             return
                     # Check neighbor regions at both ends of this path
                     ends = [p[0], p[-1]]
@@ -209,13 +223,13 @@ class PathConnectorNew(threading.Thread):
                         directions = self.cellIsAt(end, xRegion, yRegion)
                         for d in directions:
                             nextRegionCoordinate = [-1, -1]
-                            if  d == "top" and xRegion-1 >= 0 and [end[0]-1, end[1]] != previousNode:
+                            if  d == "top" and xRegion-1 >= 0 and [[end[0]-1, end[1]]] != previousNode:
                                 nextRegionCoordinate = [xRegion-1, yRegion]
-                            elif d == 'bottom' and xRegion+1 < self.nRegion and [end[0]+1, end[1]] != previousNode:
+                            elif d == 'bottom' and xRegion+1 < self.nRegion and [[end[0]+1, end[1]]] != previousNode:
                                 nextRegionCoordinate = [xRegion+1, yRegion]
-                            elif d == 'left' and yRegion-1 >= 0 and [end[0], end[1]-1] != previousNode:
+                            elif d == 'left' and yRegion-1 >= 0 and [[end[0], end[1]-1]] != previousNode:
                                 nextRegionCoordinate = [xRegion, yRegion-1]
-                            elif d == 'right' and yRegion+1 < self.nRegion and [end[0], end[1]+1] != previousNode:
+                            elif d == 'right' and yRegion+1 < self.nRegion and [[end[0], end[1]+1]] != previousNode:
                                 nextRegionCoordinate = [xRegion, yRegion+1]
                             foundSolution = self.findShortestSolution([end], goal, nextRegionCoordinate, newTraversedNodes)
                             if len(foundSolution) > 0:
@@ -475,5 +489,5 @@ class PathConnectorNew(threading.Thread):
             A path that is the solution
         """
         solution = self.trimPaths(rawSolution)
-        print solution
+        #print solution
         return solution

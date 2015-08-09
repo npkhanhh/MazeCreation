@@ -153,7 +153,7 @@ class GUI:
     def ConstructLists(self):
         # TODO: use bots to explore maze 
         ########## Explore ##########
-        nRegion = 2
+        nRegion = 5
         regionSize = self.maze.size / nRegion
         self.regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
         """lock = threading.Lock()
@@ -182,9 +182,9 @@ class GUI:
         for t in threads:
             t.join()
 
-        print "Path Map\n"
+        print "Path Map"
         print(self.regionMap)
-        print "\nDeadend Map\n"
+        print "\nDeadend Map"
         print(self.deMap)
         #fw = FloydWarshallImpl(self.regionMap, deMap, nRegion)
 
@@ -216,7 +216,7 @@ class GUI:
 
     def solveMaze(self):
 
-        nRegion = 2
+        nRegion = 5
         startT = time.time()
         FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
         print time.time() - startT
