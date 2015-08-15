@@ -4,6 +4,7 @@ Created on Jul 11, 2015
 @author: ldhuy
 """
 import threading
+from Node import Node
 
 class RegionSolverNew(threading.Thread):
     """
@@ -13,7 +14,7 @@ class RegionSolverNew(threading.Thread):
         + all the deadendsin this regions save it to the parameter 'deMap'
     """
 
-    def __init__(self, grid, boundary, xRegionMap, yRegionMap, pathMap, deMap, regionMapLock):
+    def __init__(self, grid, boundary, xRegionMap, yRegionMap, pathMap, deMap, nodeMap, regionMapLock):
         threading.Thread.__init__(self)
         self.grid = grid
         self.boundary = boundary
@@ -21,6 +22,7 @@ class RegionSolverNew(threading.Thread):
         self.yRegionMap = yRegionMap
         self.pathMap = pathMap
         self.deMap = deMap
+        self.nodeMap = nodeMap
         self.regionMapLock = regionMapLock
         self.pathList = []
         self.deList = []
@@ -28,16 +30,26 @@ class RegionSolverNew(threading.Thread):
         
         
     def run(self):
+        # Find paths and dead-ends
         self.pathList = self.sovleRegion(self.grid, self.boundary)
+        self.FindDeadends(self.grid, self.boundary)
+        
+        # Create list of nodes
+        nodeList = []
+        for p in self.pathList:
+            n = Node(p, [])
+            nodeList.append(n)
+        for de in self.deList:
+            n = Node(de, [])
+            nodeList.append(n)
+            
         # Acquire lock
         if self.regionMapLock.acquire() == 1:
             self.pathMap[self.xRegionMap][self.yRegionMap] = self.pathList
-            self.regionMapLock.release()
-            
-        self.FindDeadends(self.grid, self.boundary)
-        if self.regionMapLock.acquire() == 1:
             self.deMap[self.xRegionMap][self.yRegionMap] = self.deList
+            self.nodeMap[self.xRegionMap][self.yRegionMap] = nodeList
             self.regionMapLock.release()
+        
     
     def hasEntrance(self, grid, boundary, cell, directions):
         """

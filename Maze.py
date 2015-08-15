@@ -12,6 +12,7 @@ class Maze:
 
     def create(self, algo, size):
         self.size = size
+        self.goal = [size-1, size-1]
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
         if algo == 'Recursive Backtracker' or algo == 0:
             self.grid = ca.recursiveBacktracker(self.grid, self.size)

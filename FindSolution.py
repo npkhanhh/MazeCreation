@@ -7,7 +7,7 @@ from PathConnectorNew import PathConnectorNew
 from PathConnector import PathConnector
 import time
 
-def FindSolution(grid, pathMap, deMap, nRegion, mazeSize, start, goal):
+def FindSolution(grid, pathMap, deMap, nodeMap, nRegion, mazeSize, start, goal):
     """
     Find the solution from explored maze
     Params:
@@ -23,7 +23,8 @@ def FindSolution(grid, pathMap, deMap, nRegion, mazeSize, start, goal):
     """
     solution = [[]]
     #t0 = time.time()
-    pathCnt = PathConnectorNew(grid, start, goal, pathMap, deMap, nRegion, mazeSize, solution)
+#     pathCnt = PathConnectorNew(grid, start, goal, pathMap, deMap, nRegion, mazeSize, solution)
+    pathCnt = PathConnector(grid, start, goal, mazeSize, nodeMap, nRegion, solution)
     pathCnt.start()
     pathCnt.join()
     #print "PathConnectorNew finished running in {0}s".format(time.time() - t0)

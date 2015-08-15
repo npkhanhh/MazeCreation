@@ -1,6 +1,7 @@
 from FindSolution import FindSolution
 from RegionSolverNew import RegionSolverNew
 import time
+from constructLists import constructLists
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -63,6 +64,10 @@ class GUI:
         self.zoomString = tk.StringVar()
         self.zoomString.set('Zoom')
         self.pause = False
+        
+        self.regionMap = []
+        self.deMap = []
+        self.nodeMap = []
 
     def createWindow(self):
         self.frame = tk.Frame(self.master, width = self.w, height=self.h)
@@ -150,47 +155,6 @@ class GUI:
     
         
 
-    def ConstructLists(self):
-        # TODO: use bots to explore maze 
-        ########## Explore ##########
-        nRegion = 5
-        regionSize = self.maze.size / nRegion
-        self.regionMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
-        """lock = threading.Lock()
-        threads = []
-        for i in range(nRegion):
-            for j in range(nRegion):
-                regSolver = RegionSolver(self.grid, i*regionSize, j*regionSize, (j+1)*regionSize, (i+1)*regionSize, i, j, self.regionMap, lock)
-                threads.append(regSolver)
-                regSolver.start()
-        
-        for t in threads:
-            t.join()
-
-        print(self.regionMap)"""
-        #############################################################################################
-        #self.setupTest1()
-        self.deMap = [[[] for x in range(nRegion)] for y in range(nRegion)]
-        lock = threading.Lock()
-        threads = []
-        for i in range(nRegion):
-            for j in range(nRegion):
-                regSolver = RegionSolverNew(self.maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, self.regionMap, self.deMap, lock)
-                threads.append(regSolver)
-                regSolver.start()
-        
-        for t in threads:
-            t.join()
-
-        print "Path Map"
-        print(self.regionMap)
-        print "\nDeadend Map"
-        print(self.deMap)
-        #fw = FloydWarshallImpl(self.regionMap, deMap, nRegion)
-
-
-
-
     def createMaze(self):
         algo = self.algoName.get()
         self.canvas.config(scrollregion=(0, 0, 0, 0))
@@ -207,7 +171,7 @@ class GUI:
         self.updateInfo()
 
         
-        self.ConstructLists()
+        self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
         self.draw()
         #self.drawRegionMap()
         #self.drawDeadendPath()
@@ -215,10 +179,8 @@ class GUI:
 
 
     def solveMaze(self):
-
-        nRegion = 5
         startT = time.time()
-        FindSolution(self.maze.grid, self.regionMap, self.deMap, nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        FindSolution(self.maze.grid, self.regionMap, self.deMap, self.nodeMap, self.nRegion, self.maze.size, self.maze.start, self.maze.goal)
         print time.time() - startT
         self.maze.solve()
         self.draw()
@@ -328,7 +290,7 @@ class GUI:
             self.cellHeight = defaultCellsize
         self.updateInfo()
         self.draw()
-        self.ConstructLists()
+        self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
 
     def drawDeadend(self):
         for i in range(self.maze.no_de):
