@@ -1,8 +1,9 @@
-import bot as b
+import botThread as bt
 import random as ran
 import Maze as m
 import Utility as u
 import timeit
+import threading
 
 class botHelper:
     def __init__(self, no_bot, groundTruth, mode):
@@ -17,21 +18,20 @@ class botHelper:
 
         bots = []
         paths = [[] for i in range(self.no_bot)]
-        visisted = [[0 for i in range(self.groundTruth.size)] for j in range(self.groundTruth.size)]
+        visited = [[0 for i in range(self.groundTruth.size)] for j in range(self.groundTruth.size)]
         size = self.groundTruth.size
         if self.mode == 'Random':
             for i in range(self.no_bot):
                 r = ran.randint(0, size-1)
                 c = ran.randint(0, size-1)
-                while visisted[r][c]:
+                while visited[r][c]:
                     r = ran.randint(0, size-1)
                     c = ran.randint(0, size-1)
                 paths[i].append([r,c,-1])
-                visisted[r][c] = 1
+                visited[r][c] = 1
                 self.updateTempMaze(r, c)
         elif self.mode == 'Region':
             numberOfRows = u.findNearSquaredNumber(self.no_bot)
-            print(numberOfRows)
             noBotsPerRow = int(self.no_bot/numberOfRows)
             botsPerRow = [noBotsPerRow for i in range(numberOfRows)]
             botLeft = self.no_bot - noBotsPerRow*numberOfRows
@@ -45,7 +45,7 @@ class botHelper:
                     r = ran.randint(vsize*i, vsize*(i+1)-1)
                     c = ran.randint(hsize*j, hsize*(j+1)-1)
                     paths[botcount].append([r,c,-1])
-                    visisted[r][c] = 1
+                    visited[r][c] = 1
                     self.updateTempMaze(r, c)
                     botcount+=1
 
@@ -53,55 +53,21 @@ class botHelper:
         stop = False
         end = [False for i in range(self.no_bot)]
         overlap = True
-        while not stop:
-            stop = True
-            for i in range(self.no_bot):
-                if not end[i]:
-                    r = paths[i][-1][0]
-                    c = paths[i][-1][1]
-                    move = False
-                    if ((overlap and r>0) or (not overlap and r>bots[i].minr)) and self.groundTruth.grid[r][c].top == 0 and visisted[r-1][c] == 0:
-                        r = r - 1
-                        paths[i].append([r,c,2])
-                        visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((overlap and r<size-1) or (not overlap and r<bots[i].maxr)) and self.groundTruth.grid[r][c].bottom == 0 and visisted[r+1][c] == 0:
-                        r = r + 1
-                        paths[i].append([r,c,0])
-                        visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((overlap and c>0) or (not overlap and c>bots[i].minc)) and self.groundTruth.grid[r][c].left == 0 and visisted[r][c-1] == 0:
-                        c = c - 1
-                        paths[i].append([r,c,1])
-                        visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    elif ((overlap and c<size-1) or (not overlap and c<bots[i].maxc)) and self.groundTruth.grid[r][c].right == 0 and visisted[r][c+1] == 0:
-                        c = c + 1
-                        paths[i].append([r,c,3])
-                        visisted[r][c] = 1
-                        self.updateTempMaze(r, c)
-                        move = True
-                    if not move:
-                        prev = paths[i][-1][2]
-                        del paths[i][-1]
-                        if not paths[i]:
-                            end[i] = True
-                for i in range(self.no_bot):
-                    if not end[i]:
-                        stop = False
-                        break
-
+        lock = threading.Lock()
+        for cell in paths:
+            bots.append(bt.bot(cell[0][0], cell[0][1], lock, self.groundTruth, self.tempMaze, visited))
+        for i in range(self.no_bot):
+            bots[i].start()
+        for i in range(self.no_bot):
+            bots[i].join()
         #for i in range(self.no_bot):
         #    print paths[i]
         toc = timeit.default_timer()
-        f.write(str(size) + ' ' + str(self.mode) + ' ' + str(toc-tic) + '\n')
+        f.write(str(size) + ' ' + str(self.no_bot) + ' ' + str(self.mode) + ' ' + str(toc-tic) + '\n')
         count = 0
         for i in range(size):
             for j in range(size):
-                if visisted[i][j]:
+                if visited[i][j]:
                     count += 1
 
         print('Explore completed')
