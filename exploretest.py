@@ -10,11 +10,13 @@ maze = m.Maze()
 
 for ms in mazeSize:
     maze.load('TestMazes\\test' + '-' + str(ms) + '-' + str(algo[0]) + '-' + str(0) + '.txt')
-    for i in range(numberOfDrop):
-        bots = bh.botHelper(5, maze, 'Region')
-        bots.runBot()
+    for j in range(2,8):
+        for i in range(numberOfDrop):
+            bots = bh.botHelper(j, maze, 'Region')
+            bots.runBot()
 
-    for i in range(numberOfDrop):
-        bots = bh.botHelper(5, maze, 'Random')
-        bots.runBot()
+    for j in range(2,8):
+        for i in range(numberOfDrop):
+            bots = bh.botHelper(j, maze, 'Random')
+            bots.runBot()
 
