@@ -4,6 +4,8 @@ Created on Jul 15, 2015
 @author: ldhuy
 '''
 import threading
+import time
+import logging
 
 class PathConnector(threading.Thread):
     '''
@@ -51,20 +53,23 @@ class PathConnector(threading.Thread):
     def run(self):
         threading.Thread.run(self)
         traversedNodes = []
-        discoveredNodes = []
+        discoveredNodes = set()
         solutionFound = False
-        stack = []
+        stackL = []
+        stackS = set()
         nodesInStartReg = self.nodeMap[self.xRegStart][self.yRegStart]
         for node in nodesInStartReg:
             if self.startCell in node.path:
-                stack.append(node)
+                stackL.append(node)
+                stackS.add(node)
                 break
         
         # Look for goal cell using DFS
-        while not solutionFound and len(stack) > 0:
-            n = stack.pop(0)
+        while not solutionFound and len(stackL) > 0:
+            n = stackL.pop(0)
+            stackS.discard(n)
             if n not in discoveredNodes:
-                discoveredNodes.append(n)
+                discoveredNodes.add(n)
                 if len(traversedNodes) > 0 and n not in traversedNodes[-1].neighbors:
                     # This node is not a neighbor of the last node in traversedNode
                     newTraversedNodes = self.findLastNeighbor(traversedNodes, n)
@@ -74,14 +79,18 @@ class PathConnector(threading.Thread):
                     traversedNodes.append(n)
                 if self.goalCell in n.path:
                     solutionFound = True
-                    print "traversedNodes:"
-                    print traversedNodes
+                    t0 = time.time()
                     self.solution[:] = self.getSolution(traversedNodes)[:]
+                    t = time.time() - t0
+                    print "Time trimming solution: {}".format(t)
+                    logging.info("Time trimming solution: {}".format(t))
+#                     self.solution[:] = traversedNodes[:]
                 else:
                     children = n.neighbors
                     for child in children:
-                        if child not in stack and child not in discoveredNodes:
-                            stack.insert(0, child)
+                        if child not in stackS and child not in discoveredNodes:
+                            stackL.insert(0, child)
+                            stackS.add(child)
             
         
         
@@ -97,8 +106,9 @@ class PathConnector(threading.Thread):
         for i in reversed(range(len(traversedNodes))):
             if traversedNodes[i] not in node.neighbors:
                 idx = i
+            else:
                 break
-        result = traversedNodes[0:idx+1]
+        result = traversedNodes[0:idx]
         return result
         
     def getSolution(self, traversedNodes):
@@ -110,30 +120,75 @@ class PathConnector(threading.Thread):
             The solution
         """
         solution = []
-        p1 = traversedNodes[0].path
+#         for node in traversedNodes:
+#             solution = solution + node.path
+#         return solution
+        n1 = traversedNodes[0]
         startIdx = -1
         try:
-            startIdx = p1.index(self.startCell)
+            startIdx = n1.path.index(self.startCell)
         except:
             pass
             
         for i in range(len(traversedNodes)):
-            if i == 1 or i == len(traversedNodes)-1:
-                p2 = traversedNodes[i].path 
+            if i == 1:
+                n2 = traversedNodes[i] 
                 atCells = []
-                if self.isConnected(p1, p2, atCells, True):
-                    p1 = self.getSubpath(p1, startIdx, atCells[0])
-                    solution = solution + p1
-                    p1 = p2
-                    startIdx = atCells[1]
+                if self.isConnected(n1, n2, atCells, True):
+                    idx1, idx2 = -1, -1
+                    try:
+                        idx1 = n1.path.index(atCells[0])
+                        idx2 = n2.path.index(atCells[1])
+                    except:
+                        pass
+                    if idx1 != -1 and idx2 != -1:
+                        p1 = self.getSubpath(n1.path, startIdx, idx1)
+                        solution = solution + p1
+                        n1 = n2
+                        startIdx = idx2
+                    else:
+                        break
+            if i == len(traversedNodes)-1:
+                n2 = traversedNodes[i] 
+                atCells = []
+                if self.isConnected(n1, n2, atCells, True):
+                    idx1, idx2 = -1, -1
+                    try:
+                        idx1 = n1.path.index(atCells[0])
+                        idx2 = n2.path.index(atCells[1])
+                    except:
+                        pass
+                    if idx1 != -1 and idx2 != -1:
+                        p1 = self.getSubpath(n1.path, startIdx, idx1)
+                        solution = solution + p1
+                        startIdx = idx2
+                        idx2 = -1
+                        try:
+                            idx2 = n2.path.index(self.goalCell)
+                        except:
+                            pass
+                        p2 = self.getSubpath(n2.path, startIdx, idx2)
+                        solution = solution + p2
+                    else:
+                        break
             if i != 0 and i != 1 and i != len(traversedNodes)-1:
-                p2 = traversedNodes[i].path 
+                n2 = traversedNodes[i] 
                 atCells = []
-                if self.isConnected(p1, p2, atCells, False):
-                    p1 = self.getSubpath(p1, startIdx, atCells[0])
-                    solution = solution + p1
-                    p1 = p2
-                    startIdx = atCells[1]
+                if self.isConnected(n1, n2, atCells, True):
+                    idx1, idx2 = -1, -1
+                    try:
+                        idx1 = n1.path.index(atCells[0])
+                        idx2 = n2.path.index(atCells[1])
+                    except:
+                        pass
+                    if idx1 != -1 and idx2 != -1:
+                        p1 = self.getSubpath(n1.path, startIdx, idx1)
+                        solution = solution + p1
+                        n1 = n2
+                        startIdx = idx2
+                    else:
+                        break
+        print solution
         return solution
         
      
@@ -142,81 +197,86 @@ class PathConnector(threading.Thread):
 
     
         
-    def isConnected(self, p1, p2, atCells, bruteForce):
+    def isConnected(self, n1, n2, atCells, bruteForce):
         """
         Check if 2 paths are connected
         Params:
-            p1, p2: 2 paths
-            atCell: the cell in p2 where 2 paths connect
+            n1, n2: 2 nodes
+            atCell: the cell in n2 where 2 paths connect
             bruteForce: If True, scan through the paths to find the intersection
                         If False, only check the 2 ends of the paths
         """
-        if bruteForce:
-            hasCommonSubpath = False
-            #for i in range(len(p1)):
-            i = 0
-            while i < len(p1):
-                c1 = p1[i]
-                #for j in range(len(p2)):
-                j = 0
-                while j < len(p2):
-                    c2 = p2[j]
-                    if c1 == c2:
-                        hasCommonSubpath = True
-                        if i+1<len(p1):
-                            i = i + 1
-                            j = j + 1
-                            c1 = p1[i]
-                            l = list([c1, c2])
-                            atCells[:] = l[:]
-                            continue
-                        break
-                    else:
-                        if hasCommonSubpath:
-                            return True
+        result = True
+        if n1 in n2.neighbors and n2 in n1.neighbors:
+            if bruteForce:
+                hasCommonSubpath = False
+                i = 0
+                while i < len(n1.path):
+                    c1 = n1.path[i]
+                    j = 0
+                    while j < len(n2.path):
+                        c2 = n2.path[j]
+                        if c1 == c2:
+                            hasCommonSubpath = True
+                            if i+1<len(n1.path):
+                                i = i + 1
+                                j = j + 1
+                                c1 = n1.path[i]
+                                l = list([c1, c2])
+                                atCells[:] = l[:]
+                                continue
+                            break
                         else:
-                            l = list([c1, c2])
-                            atCells[:] = l[:]
-                            if c1[0] == c2[0]:
-                                if c1[1] == c2[1]-1:
-                                    if self.grid[c1[0]][c1[1]].right == 0 and self.grid[c2[0]][c2[1]].left == 0:
-                                        return True
-                                elif c1[1] == c2[1]+1:
-                                    if self.grid[c1[0]][c1[1]].left == 0 and self.grid[c2[0]][c2[1]].right == 0:
-                                        return True
-                            elif c1[1] == c2[1]:
-                                if c1[0] == c2[0]-1:
-                                    if self.grid[c1[0]][c1[1]].bottom == 0 and self.grid[c2[0]][c2[1]].top == 0:
-                                        return True
-                                elif c1[0] == c2[0]+1:
-                                    if self.grid[c1[0]][c1[1]].top == 0 and self.grid[c2[0]][c2[1]].bottom == 0:
-                                        return True
-                    j = j + 1
-                i = i + 1
+                            if hasCommonSubpath:
+                                return True
+                            else:
+                                l = list([c1, c2])
+                                atCells[:] = l[:]
+                                if c1[0] == c2[0]:
+                                    if c1[1] == c2[1]-1:
+                                        if self.grid[c1[0]][c1[1]].right == 0 and self.grid[c2[0]][c2[1]].left == 0:
+                                            return True
+                                    elif c1[1] == c2[1]+1:
+                                        if self.grid[c1[0]][c1[1]].left == 0 and self.grid[c2[0]][c2[1]].right == 0:
+                                            return True
+                                elif c1[1] == c2[1]:
+                                    if c1[0] == c2[0]-1:
+                                        if self.grid[c1[0]][c1[1]].bottom == 0 and self.grid[c2[0]][c2[1]].top == 0:
+                                            return True
+                                    elif c1[0] == c2[0]+1:
+                                        if self.grid[c1[0]][c1[1]].top == 0 and self.grid[c2[0]][c2[1]].bottom == 0:
+                                            return True
+                        j = j + 1
+                    i = i + 1
+            else:
+                ends1 = [n1.path[0], n1.path[-1]]
+                ends2 = [n2.path[0], n2.path[-1]]
+                for e1 in ends1:
+                    for e2 in ends2:
+                        l = list([e1, e2])
+                        atCells[:] = l[:]
+                        if e1 == e2:
+                            return True
+                        if e1[0] == e2[0]:
+                            if e1[1] == e2[1]-1:
+                                if self.grid[e1[0]][e1[1]].right == 0 and self.grid[e2[0]][e2[1]].left == 0:
+                                    return True
+                            elif e1[1] == e2[1]+1:
+                                if self.grid[e1[0]][e1[1]].left == 0 and self.grid[e2[0]][e2[1]].right == 0:
+                                    return True
+                        elif e1[1] == e2[1]:
+                            if e1[0] == e2[0]-1:
+                                if self.grid[e1[0]][e1[1]].bottom == 0 and self.grid[e2[0]][e2[1]].top == 0:
+                                    return True
+                            elif e1[0] == e2[0]+1:
+                                if self.grid[e1[0]][e1[1]].top == 0 and self.grid[e2[0]][e2[1]].bottom == 0:
+                                    return True
+            return False
         else:
-            ends1 = [p1[0], p1[-1]]
-            ends2 = [p2[0], p2[-1]]
-            for e1 in ends1:
-                for e2 in ends2:
-                    l = list([e1, e2])
-                    atCells[:] = l[:]
-                    if e1 == e2:
-                        return True
-                    if e1[0] == e2[0]:
-                        if e1[1] == e2[1]-1:
-                            if self.grid[e1[0]][e1[1]].right == 0 and self.grid[e2[0]][e2[1]].left == 0:
-                                return True
-                        elif e1[1] == e2[1]+1:
-                            if self.grid[e1[0]][e1[1]].left == 0 and self.grid[e2[0]][e2[1]].right == 0:
-                                return True
-                    elif e1[1] == e2[1]:
-                        if e1[0] == e2[0]-1:
-                            if self.grid[e1[0]][e1[1]].bottom == 0 and self.grid[e2[0]][e2[1]].top == 0:
-                                return True
-                        elif e1[0] == e2[0]+1:
-                            if self.grid[e1[0]][e1[1]].top == 0 and self.grid[e2[0]][e2[1]].bottom == 0:
-                                return True
-        return False
+            result = False
+            
+        return result
+        
     
     def cellIsAt(self, cell, xRegion, yRegion):
         """
@@ -394,5 +454,4 @@ class PathConnector(threading.Thread):
             A path that is the solution
         """
         solution = self.trimPaths(rawSolution)
-        #print solution
         return solution

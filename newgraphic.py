@@ -1,7 +1,7 @@
 from FindSolution import FindSolution
-from RegionSolverNew import RegionSolverNew
 import time
 from constructLists import constructLists
+import logging
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -11,7 +11,6 @@ import tkFileDialog as tkfd
 from PathConnector import PathConnector
 import sys
 import bot as b
-from RegionSolver import RegionSolver
 import threading
 import random as ran
 import Maze as m
@@ -68,6 +67,7 @@ class GUI:
         self.regionMap = []
         self.deMap = []
         self.nodeMap = []
+        self.solution = []
 
     def createWindow(self):
         self.frame = tk.Frame(self.master, width = self.w, height=self.h)
@@ -180,8 +180,10 @@ class GUI:
 
     def solveMaze(self):
         startT = time.time()
-        FindSolution(self.maze.grid, self.regionMap, self.deMap, self.nodeMap, self.nRegion, self.maze.size, self.maze.start, self.maze.goal)
-        print time.time() - startT
+        self.solution = FindSolution(self.maze.grid, self.regionMap, self.deMap, self.nodeMap, self.nRegion, self.maze.size, self.maze.start, self.maze.goal)
+        t = time.time() - startT
+        print "Solving time of regional method: {}".format(t)
+        logging.info("Solving time of regional method: {}".format(t))
         self.maze.solve()
         self.draw()
         self.noPath.set(noPathString + str(self.maze.no_path))
@@ -230,8 +232,10 @@ class GUI:
         #else:
         #    outColor = 'black'
         #outColor = 'green'
-        for i in range(len(self.maze.path_list)):
-            path = self.maze.path_list[i]
+#         path_list = self.maze.path_list)
+        path_list = [self.solution]
+        for i in range(len(path_list)):
+            path = path_list[i]
             for j in range(len(path)):
                 r = path[j][0]
                 c = path[j][1]

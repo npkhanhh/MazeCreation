@@ -2,6 +2,8 @@ import Cell as c
 import createAlgorithm as ca
 import solveAlgorithm as sa
 import sys
+import time
+import logging
 
 class Maze:
     def __init__(self, size=50, algo='Backtracker'):
@@ -14,12 +16,16 @@ class Maze:
         self.size = size
         self.goal = [size-1, size-1]
         self.grid = [[c.Cell() for i in range(self.size)] for j in range(self.size)]
+        t0 = time.time()
         if algo == 'Recursive Backtracker' or algo == 0:
             self.grid = ca.recursiveBacktracker(self.grid, self.size)
         elif algo == 'Backtracker' or algo == 1:
             self.grid = ca.backtracker(self.grid, self.size)
         elif algo == 'Kruskal' or algo == 2:
             self.grid = ca.kruskal(self.grid, self.size)
+        t = time.time() - t0
+        print "Maze created in {}s".format(t)
+        logging.info("Maze created in {}s".format(t))
         self.resetGrid()
 
     def resetGrid(self):
@@ -41,7 +47,11 @@ class Maze:
 
 
     def solve(self):
+        t0 = time.time()
         self.path_list = sa.dfsIterative(self.grid, self.size)
+        t = time.time() - t0
+        print "Solving time DFS Iterative {}".format(t)
+        logging.info("Solving time DFS Iterative {}".format(t))
         self.no_path = len(self.path_list)
         for i in range(len(self.path_list)):
             if len(self.path_list[i]) < self.shortestPathLength:

@@ -37,10 +37,10 @@ class RegionSolverNew(threading.Thread):
         # Create list of nodes
         nodeList = []
         for p in self.pathList:
-            n = Node(p, [])
+            n = Node(p, set(), 'p')
             nodeList.append(n)
         for de in self.deList:
-            n = Node(de, [])
+            n = Node(de, set(), 'd')
             nodeList.append(n)
             
         # Acquire lock
@@ -101,7 +101,6 @@ class RegionSolverNew(threading.Thread):
         if self.hasEntrance(grid, [top, bottom, left, right], [row, col], entranceAt):
             path.append([row, col])
             appended = True
-#             entranceCellList = entranceCellList.append(path)
             entranceCellList.append(path)
         
         
@@ -110,7 +109,6 @@ class RegionSolverNew(threading.Thread):
             if not appended:
                 pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row, col - 1, 'left', length + 1, pathNew)
-            #entranceCellList = entranceCellList + entranceCells
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'top' and 'bottom' not in entranceAt and row < bottom - 1 and grid[row][col].bottom == 0:    # check bottom cell
@@ -118,7 +116,6 @@ class RegionSolverNew(threading.Thread):
             if not appended:
                 pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row + 1, col, 'bottom', length + 1, pathNew)
-            #entranceCellList = entranceCellList + entranceCells
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'left' and 'right' not in entranceAt and col < right - 1 and grid[row][col].right == 0:    # check right cell
@@ -126,7 +123,6 @@ class RegionSolverNew(threading.Thread):
             if not appended:
                 pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row, col + 1, 'right', length + 1, pathNew)
-            #entranceCellList = entranceCellList + entranceCells
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'bottom' and 'top' not in entranceAt and row > top and grid[row][col].top == 0:    # check top cell
@@ -134,7 +130,6 @@ class RegionSolverNew(threading.Thread):
             if not appended:
                 pathNew.append([row, col])
             entranceCells = self.findPath(grid, top, left, right, bottom, row - 1, col, 'top', length + 1, pathNew)
-            #entranceCellList = entranceCellList + entranceCells
             for p in entranceCells:
                 entranceCellList.append(p)
             
@@ -191,20 +186,6 @@ class RegionSolverNew(threading.Thread):
                                     entrancePairList = entrancePairList + foundEntrances
         
         # Remove duplicated paths
-#         i1 = 0
-#         while i1 < len(entrancePairList):#for i1 in range1:
-#             i2 = 0
-#             while i2 < len(entrancePairList):#for i2 in range1:
-#                 if i2 != i1:
-#                     reversedList = list(reversed(entrancePairList[i2]))
-#                     if reversedList == entrancePairList[i1]:
-#                         entrancePairList.pop(i2)
-#                 if i2 == len(entrancePairList) - 1:
-#                     break
-#                 i2 += 1
-#             if i1 == len(entrancePairList) - 1:
-#                 break
-#             i1 += 1
         i = 0
         length = len(entrancePairList)
         while i < length:

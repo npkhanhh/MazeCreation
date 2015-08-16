@@ -3,9 +3,7 @@ Created on Jul 7, 2015
 
 @author: ldhuy
 '''
-from PathConnectorNew import PathConnectorNew
 from PathConnector import PathConnector
-import time
 
 def FindSolution(grid, pathMap, deMap, nodeMap, nRegion, mazeSize, start, goal):
     """
@@ -28,7 +26,7 @@ def FindSolution(grid, pathMap, deMap, nodeMap, nRegion, mazeSize, start, goal):
     pathCnt.start()
     pathCnt.join()
     #print "PathConnectorNew finished running in {0}s".format(time.time() - t0)
-    print "\nSolution from {0} to {1} :".format(str(start), str(goal)) 
-    print solution
+#     print "\nSolution from {0} to {1} :".format(str(start), str(goal)) 
+#     print solution
     
     return solution
