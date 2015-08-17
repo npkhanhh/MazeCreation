@@ -115,7 +115,7 @@ def constructLists(maze, pathMap, deMap, nodeMap):
     Then build a map of regions.
     Return the number of region at each side of the maze
     """
-    nRegion = 2
+    nRegion = 5
     regionSize = maze.size / nRegion
     pathMap[:] = [[[] for x in range(nRegion)] for y in range(nRegion)][:]
     deMap[:] = [[[] for x in range(nRegion)] for y in range(nRegion)][:]
