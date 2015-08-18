@@ -4,6 +4,7 @@ import Maze as m
 import Utility as u
 import timeit
 import threading
+import server
 
 class botHelper:
     def __init__(self, no_bot, groundTruth, mode):
@@ -15,6 +16,8 @@ class botHelper:
 
     def runBot(self):
         f = open('timeexplore.txt', 'a')
+
+        self.sv = server(self.no_bot, self.tempMaze)
 
         bots = []
         paths = [[] for i in range(self.no_bot)]
