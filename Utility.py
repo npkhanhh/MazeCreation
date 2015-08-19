@@ -12,3 +12,11 @@ def findNearSquaredNumber(n):
             return int(m.sqrt(smaller))
         bigger = bigger+1
         smaller = smaller-1
+        
+def findGreatestSmallerSquaredNumber(n):
+    """
+    Find the greatest squared number that smaller than n
+    """
+    n = n - 1
+    return int(m.sqrt(n))
+    
