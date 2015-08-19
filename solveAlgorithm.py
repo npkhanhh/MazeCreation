@@ -31,14 +31,16 @@ def dfs_recursion(grid, size, path_list, path, r, c, prev):
         del path[-1]
     return path_list
 
-def dfsIterative(grid, size):
+def dfsIterative(grid, size, start, goal):
     path_list = []
-    path = [[0, 0]]
-    stack = [[0, 0]]
+    if start == goal:
+        path_list[start]
+        return path_list
+    path = [start]
     visited = [[0 for i in range(size)] for j in range(size)]
-    r = 0
-    c = 0
-    visited[0][0] = 1
+    r = start[0]
+    c = start[1]
+    visited[r][c] = 1
     while path:
         move = False
         if grid[r][c].top == 0 and visited[r-1][c] != 1:
@@ -46,7 +48,7 @@ def dfsIterative(grid, size):
             visited[r-1][c] = 1
             move = True
             r = r - 1
-            if r==size-1 and c == size-1:
+            if r==goal[0] and c == goal[1]:
                 pathtemp = copy.deepcopy(path)
                 path_list.append(pathtemp)
                 return path_list
@@ -55,7 +57,7 @@ def dfsIterative(grid, size):
             visited[r][c+1] = 1
             move = True
             c = c + 1
-            if r==size-1 and c == size-1:
+            if r==goal[0] and c == goal[1]:
                 pathtemp = copy.deepcopy(path)
                 path_list.append(pathtemp)
                 return path_list
@@ -65,7 +67,7 @@ def dfsIterative(grid, size):
             visited[r+1][c] = 1
             move = True
             r = r + 1
-            if r==size-1 and c == size-1:
+            if r==goal[0] and c == goal[1]:
                 pathtemp = copy.deepcopy(path)
                 path_list.append(pathtemp)
                 return path_list
@@ -74,7 +76,7 @@ def dfsIterative(grid, size):
             visited[r][c-1] = 1
             move = True
             c = c - 1
-            if r==size-1 and c == size-1:
+            if r==goal[0] and c == goal[1]:
                 pathtemp = copy.deepcopy(path)
                 path_list.append(pathtemp)
                 return path_list

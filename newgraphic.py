@@ -15,6 +15,7 @@ import threading
 import random as ran
 import Maze as m
 import Utility as u
+import tkMessageBox as tkmb
 
 #### Some global variables
 noPathString = 'Number of paths: '
@@ -24,13 +25,15 @@ defaultCellsize = 5
 color = ['#00ff00', '#ff8000', '#eb3849', '#0080ff']
 
 class GUI:
-    def __init__(self, w, h, maze):
+    def __init__(self, w, h, mazeSize):
         self.master = tk.Tk()
-        self.maze = maze
+        self.master.wm_title("The Maze" +  u"\u2122")
+        self.maze = None
+        self.mazeSize = mazeSize 
         self.w = w
         self.h = h
-        self.cellWidth = (w - 20)/maze.size
-        self.cellHeight = (h - 20)/maze.size
+        self.cellWidth = (w - 20)/mazeSize
+        self.cellHeight = (h - 20)/mazeSize
 
         self.algoName = tk.StringVar()
         self.algoName.set('Backtracker')
@@ -57,6 +60,8 @@ class GUI:
         self.regionFlag.set(0)
         self.overlapFlag = tk.IntVar()
         self.overlapFlag.set(1)
+        self.startGoalFlag = tk.IntVar()
+        self.startGoalFlag.set(1)
 
         self.sizeString = tk.StringVar()
         self.sizeString.set('Size:')
@@ -89,6 +94,7 @@ class GUI:
         self.gridButton = tk.Checkbutton(self.master, text="Grid", variable=self.gridFlag, command=self.draw)
         self.solutionButton = tk.Checkbutton(self.master, text="Solution", variable=self.solutionFlag, command=self.draw)
         self.deadEndButton = tk.Checkbutton(self.master, text="Deadend", variable=self.deFlag, command=self.draw)
+        self.startGoalButton = tk.Checkbutton(self.master, text="Start Goal", variable=self.startGoalFlag, command=self.draw)
         self.zoneButton = tk.Checkbutton(self.master, text="Zone", variable=self.zoneFlag, command=self.draw)
         self.regionButton = tk.Checkbutton(self.master, text="Region", variable=self.regionFlag, command=self.draw)
 
@@ -126,7 +132,7 @@ class GUI:
         self.shortestPathText.grid(row=2, column=1, columnspan=3)
         self.sizeText.grid(row=3, column=1)
         self.sizeEntry.grid(row=3, column=2, columnspan=2)
-        self.sizeEntry.insert(0, str(self.maze.size))
+        self.sizeEntry.insert(0, str(self.mazeSize))
         self.createButton.grid(row=4, column=1, columnspan=3)
         self.menu.grid(row=5, column=1, columnspan=3)
         self.solveButton.grid(row=6, column=1, columnspan=3)
@@ -137,20 +143,21 @@ class GUI:
 
         self.gridButton.grid(row=10, column=1, columnspan=3)
         self.solutionButton.grid(row=11, column=1, columnspan=3)
-        self.deadEndButton.grid(row=12, column=1, columnspan=3)
-        self.zoneButton.grid(row=13, column=1, columnspan=3)
-        self.regionButton.grid(row=14, column=1, columnspan=3)
+        self.startGoalButton.grid(row=12, column=1, columnspan=3)
+        self.deadEndButton.grid(row=13, column=1, columnspan=3)
+        self.zoneButton.grid(row=14, column=1, columnspan=3)
+        self.regionButton.grid(row=15, column=1, columnspan=3)
 
-        self.zoomInButton.grid(row=15, column=1)
-        self.zoomText.grid(row=15, column=2)
-        self.zoomOutButton.grid(row=15, column=3)
+        self.zoomInButton.grid(row=16, column=1)
+        self.zoomText.grid(row=16, column=2)
+        self.zoomOutButton.grid(row=16, column=3)
 
-        self.botEntry.grid(row=16, column=1, columnspan=3)
+        self.botEntry.grid(row=17, column=1, columnspan=3)
         self.botEntry.insert(0, '0')
-        self.dropMenu.grid(row=17, column=1, columnspan=3)
-        self.runButton.grid(row=18, column=1, columnspan=3)
-        self.overlapButton.grid(row=19, column=1, columnspan=3)
-        self.pauseButton.grid(row=20, column=1, columnspan=3)
+        self.dropMenu.grid(row=18, column=1, columnspan=3)
+        self.runButton.grid(row=19, column=1, columnspan=3)
+        self.overlapButton.grid(row=20, column=1, columnspan=3)
+        self.pauseButton.grid(row=21, column=1, columnspan=3)
 
     
         
@@ -167,11 +174,12 @@ class GUI:
         if self.cellHeight < defaultCellsize:
             self.canvas.config(scrollregion=(0, 0, defaultCellsize*size + 20, defaultCellsize*size + 20))
             self.cellHeight = defaultCellsize
+        self.maze = m.Maze()
         self.maze.create(algo, size)
         self.updateInfo()
 
         
-        self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
+#         self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
         self.draw()
         #self.drawRegionMap()
         #self.drawDeadendPath()
@@ -180,9 +188,9 @@ class GUI:
 
     def solveMaze(self):
         startT = time.time()
-        self.solution = FindSolution(self.maze.grid, self.regionMap, self.deMap, self.nodeMap, self.nRegion, self.maze.size, self.maze.start, self.maze.goal)
+#         self.solution = FindSolution(self.maze.grid, self.regionMap, self.deMap, self.nodeMap, self.nRegion, self.maze.size, self.maze.start, self.maze.goal)
         t = time.time() - startT
-        print "Solving time of regional method: {}".format(t)
+#         print "Solving time of regional method: {}".format(t)
         logging.info("Solving time of regional method: {}".format(t))
         self.maze.solve()
         self.draw()
@@ -208,9 +216,11 @@ class GUI:
             self.drawRegionMap()
         if self.solutionFlag.get():
             self.drawSolution(1)
+        if self.startGoalFlag.get():
+            self.drawStartGoal()
         if self.gridFlag.get():
             self.drawGrid(self.maze)
-
+        
 
     def drawGrid(self, maze):
         for r in range(maze.size):
@@ -226,14 +236,23 @@ class GUI:
                 if maze.grid[r][c].left == 1:
                     self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*c, 10+self.cellHeight*(r+1))
 
+    def drawStartGoal(self):
+        r = self.maze.start[0]
+        c = self.maze.start[1]
+        self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#637ee9', outline='#637ee9')
+        
+        r = self.maze.goal[0]
+        c = self.maze.goal[1]
+        self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill='#800080', outline='#800080')
+    
     def drawSolution(self, mode):
         #if mode == 0:
         #    outColor = 'green'
         #else:
         #    outColor = 'black'
         #outColor = 'green'
-#         path_list = self.maze.path_list)
-        path_list = [self.solution]
+        path_list = self.maze.path_list
+#         path_list = [self.solution]
         for i in range(len(path_list)):
             path = path_list[i]
             for j in range(len(path)):
@@ -294,7 +313,7 @@ class GUI:
             self.cellHeight = defaultCellsize
         self.updateInfo()
         self.draw()
-        self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
+#         self.nRegion = constructLists(self.maze, self.regionMap, self.deMap, self.nodeMap)
 
     def drawDeadend(self):
         for i in range(self.maze.no_de):
@@ -313,6 +332,8 @@ class GUI:
 
 
     def editWall(self, event, mode):
+        if not self.maze:
+            return
         x = event.x - 10
         y = event.y - 10
         r = int(y / self.cellHeight)
@@ -388,7 +409,7 @@ class GUI:
                 self.updateTempMaze(r, c)
         elif mode == 'Region':
             numberOfRows = u.findNearSquaredNumber(self.no_bot)
-            print(numberOfRows)
+#             print(numberOfRows)
             noBotsPerRow = int(self.no_bot/numberOfRows)
             botsPerRow = [noBotsPerRow for i in range(numberOfRows)]
             botLeft = self.no_bot - noBotsPerRow*numberOfRows
@@ -470,8 +491,8 @@ class GUI:
                 self.master.update()
                 self.master.after(10)
 
-        for i in range(self.no_bot):
-            print self.paths[i]
+#         for i in range(self.no_bot):
+#             print self.paths[i]
         count = 0
         for i in range(size):
             for j in range(size):
@@ -480,6 +501,9 @@ class GUI:
 
         print('Explore completed')
         print('Cell explored: ' + str(count) + '/' + str(size*size))
+        
+        tkmb.showinfo(None, "Explored completed")
+        self.draw()
 
 
     def updateTempMaze(self, r, c):
@@ -498,20 +522,28 @@ class GUI:
 
     def pausePressed(self, event):
         self.pause = not self.pause
-        print self.pause
+#         print self.pause
 
     def setStart(self, event):
+        if not self.maze:
+            return
         x = event.x - 10
         y = event.y - 10
         r = int(y / self.cellHeight)
         c = int(x / self.cellWidth)
         self.maze.start = [r, c]
         print("Start is set at: " + str([r, c]))
+        self.maze.resetGrid()
+        self.draw()
 
     def setGoal(self, event):
+        if not self.maze:
+            return
         x = event.x - 10
         y = event.y - 10
         r = int(y / self.cellHeight)
         c = int(x / self.cellWidth)
         self.maze.goal = [r, c]
         print("Goal is set at: " + str([r, c]))
+        self.maze.resetGrid()
+        self.draw()

@@ -24,8 +24,8 @@ class Maze:
         elif algo == 'Kruskal' or algo == 2:
             self.grid = ca.kruskal(self.grid, self.size)
         t = time.time() - t0
-        print "Maze created in {}s".format(t)
-        logging.info("Maze created in {}s".format(t))
+#         print "Maze created in {}s".format(t)
+#         logging.info("Maze created in {}s".format(t))
         self.resetGrid()
 
     def resetGrid(self):
@@ -48,9 +48,9 @@ class Maze:
 
     def solve(self):
         t0 = time.time()
-        self.path_list = sa.dfsIterative(self.grid, self.size)
+        self.path_list = sa.dfsIterative(self.grid, self.size, self.start, self.goal)
         t = time.time() - t0
-        print "Solving time DFS Iterative {}".format(t)
+#         print "Solving time DFS Iterative {}".format(t)
         logging.info("Solving time DFS Iterative {}".format(t))
         self.no_path = len(self.path_list)
         for i in range(len(self.path_list)):
