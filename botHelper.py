@@ -1,5 +1,6 @@
 import botThread as bt
 from clientBot import clientBot as cb
+import serverBot as sb
 import random as ran
 import Maze as m
 import Utility as u
@@ -22,9 +23,8 @@ class botHelper:
         
         self.nRegion = u.findGreatestSmallerSquaredNumber(self.no_bot)
         gg.setupVisited(self.nRegion)
-        self.sv = server(self.no_bot, self.tempMaze, 'blah')
+        self.sv = sb.server(self.no_bot, self.tempMaze, 'blah')
         self.sv.start()
-        
         self.lockMap = [[threading.Lock() for i in range(self.nRegion)] for j in range(self.nRegion)]
         
 
