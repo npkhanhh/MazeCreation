@@ -527,8 +527,9 @@ class GUI:
     def setStart(self, event):
         if not self.maze:
             return
-        x = event.x - 10
-        y = event.y - 10
+        canvas = event.widget
+        x = canvas.canvasx(event.x) - 10
+        y = canvas.canvasy(event.y) - 10
         r = int(y / self.cellHeight)
         c = int(x / self.cellWidth)
         self.maze.start = [r, c]
@@ -539,8 +540,9 @@ class GUI:
     def setGoal(self, event):
         if not self.maze:
             return
-        x = event.x - 10
-        y = event.y - 10
+        canvas = event.widget
+        x = canvas.canvasx(event.x) - 10
+        y = canvas.canvasy(event.y) - 10
         r = int(y / self.cellHeight)
         c = int(x / self.cellWidth)
         self.maze.goal = [r, c]
