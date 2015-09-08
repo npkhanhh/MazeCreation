@@ -7,7 +7,32 @@ from globalGroundTruth import globalGroundTruth as ggt
 import socket
 import time
 import threading
-from tablib.packages.odf.style import RegionCenter
+from twisted.internet import reactor
+from twisted.internet.protocol import Protocol,ClientFactory
+from twisted.internet.endpoints import TCP4ClientEndpoint, connectProtocol
+from twisted.internet.defer import Deferred
+#from tablib.packages.odf.style import RegionCenter
+
+
+class Echo(Protocol):
+    def sendMessage(self, msg):
+        self.transport.write(msg)
+
+class EchoClientFactory(ClientFactory):
+    protocol = Echo
+
+    def __init__(self):
+        self.done = Deferred()
+
+
+    def clientConnectionFailed(self, connector, reason):
+        print('connection failed:', reason.getErrorMessage())
+        self.done.errback(reason)
+
+
+    def clientConnectionLost(self, connector, reason):
+        print('connection lost:', reason.getErrorMessage())
+        self.done.callback(None)
 
 class clientBot(threading.Thread):
     '''
@@ -28,13 +53,14 @@ class clientBot(threading.Thread):
         self.path = [[self.startRow, self.startCol]]
         self.regionSize = regionSize
         
-        self.soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.soc.connect((socket.gethostname(), 51515))
+
         
     def run(self):
         threading.Thread.run(self)
         r = self.path[-1][0]
         c = self.path[-1][1]
+        factory = EchoClientFactory()
+        self.point = reactor.connectTCP('localhost', 51510, factory)
         while self.path:
             move = False
             if self.globalGroundTruth.grid[r][c].top == 0:
@@ -51,7 +77,7 @@ class clientBot(threading.Thread):
                     # Send message to server
                     cellInfo = self.updateTempMaze(r, c)
                     package = "{0} {1} {2} {3} {4} {5} {6}".format("updateCoor", r, c, cellInfo[0], cellInfo[1], cellInfo[2], cellInfo[3])
-                    self.soc.sendall(package)                    
+                    self.point.sendLine(package)
                 self.lockMap[nextRegionX][nextRegionY].release()
             elif self.globalGroundTruth.grid[r][c].right == 0:
                 nextR, nextC = r, c+1
@@ -66,7 +92,7 @@ class clientBot(threading.Thread):
                     # Send message to server
                     cellInfo = self.updateTempMaze(r, c)
                     package = "{0} {1} {2} {3} {4} {5} {6}".format("updateCoor", r, c, cellInfo[0], cellInfo[1], cellInfo[2], cellInfo[3])
-                    self.soc.sendall(package)
+                    self.point.sendLine(package)
                 self.lockMap[nextRegionX][nextRegionY].release()    
             elif self.globalGroundTruth.grid[r][c].bottom == 0:
                 nextR, nextC = r+1, c
@@ -81,7 +107,7 @@ class clientBot(threading.Thread):
                     # Send message to server
                     cellInfo = self.updateTempMaze(r, c)
                     package = "{0} {1} {2} {3} {4} {5} {6}".format("updateCoor", r, c, cellInfo[0], cellInfo[1], cellInfo[2], cellInfo[3])
-                    self.soc.sendall(package)
+                    self.point.sendLine(package)
                 self.lockMap[nextRegionX][nextRegionY].release()
             elif self.globalGroundTruth.grid[r][c].left == 0:
                 nextR, nextC = r, c-1
@@ -96,16 +122,15 @@ class clientBot(threading.Thread):
                     # Send message to server
                     cellInfo = self.updateTempMaze(r, c)
                     package = "{0} {1} {2} {3} {4} {5} {6}".format("updateCoor", r, c, cellInfo[0], cellInfo[1], cellInfo[2], cellInfo[3])
-                    self.soc.sendall(package)
+                    self.point.sendLine(package)
                 self.lockMap[nextRegionX][nextRegionY].release()
             if not move:
                 del self.path[-1]
                 if self.path:
                     r = self.path[-1][0]
                     c = self.path[-1][1]
-        package = "Done"
-        self.soc.sendall(package)
-        self.soc.close()
+
+        self.point.transport.loseConnection()
                     
     def updateTempMaze(self, r, c):
         top = self.globalGroundTruth.grid[r][c].top
