@@ -4,7 +4,7 @@ Created on Aug 9, 2015
 @author: ldhuy
 '''
 import threading
-from RegionSolverNew import RegionSolverNew
+from FindNodes import FindNodes
 import time
 import logging
 
@@ -124,9 +124,9 @@ def constructLists(maze, pathMap, deMap, nodeMap):
     threads = []
     for i in range(nRegion):
         for j in range(nRegion):
-            regSolver = RegionSolverNew(maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, pathMap, deMap, nodeMap, lock)
-            threads.append(regSolver)
-            regSolver.start()
+            nodeFinder = FindNodes(maze.grid, [i*regionSize, (i+1)*regionSize, j*regionSize, (j+1)*regionSize], i, j, pathMap, deMap, nodeMap, lock)
+            threads.append(nodeFinder)
+            nodeFinder.start()
     
     for t in threads:
         t.join()

@@ -6,12 +6,12 @@ Created on Jul 11, 2015
 import threading
 from Node import Node
 
-class RegionSolverNew(threading.Thread):
+class FindNodes(threading.Thread):
     """
-    Run as a single thread, solve one specified region.
+    Run as a single thread, run with one specified region.
     This thread will find
         + all the paths that connect neighbor regions and save it to the parameter 'pathMap'
-        + all the deadendsin this regions save it to the parameter 'deMap'
+        + all the deadends in this regions save it to the parameter 'deMap'
     """
 
     def __init__(self, grid, boundary, xRegionMap, yRegionMap, pathMap, deMap, nodeMap, regionMapLock):
@@ -31,8 +31,8 @@ class RegionSolverNew(threading.Thread):
         
     def run(self):
         # Find paths and dead-ends
-        self.pathList = self.sovleRegion(self.grid, self.boundary)
-        self.FindDeadends(self.grid, self.boundary)
+        self.pathList = self.findPath(self.grid, self.boundary)
+        self.findDeadends(self.grid, self.boundary)
         
         # Create list of nodes
         nodeList = []
@@ -83,7 +83,7 @@ class RegionSolverNew(threading.Thread):
     
     
     
-    def findPath(self, grid, top, left, right, bottom, row, col, direction, length, path):
+    def findPathRecursive(self, grid, top, left, right, bottom, row, col, direction, length, path):
         """
         Params:
             grid: the whole maze
@@ -108,28 +108,28 @@ class RegionSolverNew(threading.Thread):
             pathNew = list(path)
             if not appended:
                 pathNew.append([row, col])
-            entranceCells = self.findPath(grid, top, left, right, bottom, row, col - 1, 'left', length + 1, pathNew)
+            entranceCells = self.findPathRecursive(grid, top, left, right, bottom, row, col - 1, 'left', length + 1, pathNew)
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'top' and 'bottom' not in entranceAt and row < bottom - 1 and grid[row][col].bottom == 0:    # check bottom cell
             pathNew = list(path)
             if not appended:
                 pathNew.append([row, col])
-            entranceCells = self.findPath(grid, top, left, right, bottom, row + 1, col, 'bottom', length + 1, pathNew)
+            entranceCells = self.findPathRecursive(grid, top, left, right, bottom, row + 1, col, 'bottom', length + 1, pathNew)
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'left' and 'right' not in entranceAt and col < right - 1 and grid[row][col].right == 0:    # check right cell
             pathNew = list(path)
             if not appended:
                 pathNew.append([row, col])
-            entranceCells = self.findPath(grid, top, left, right, bottom, row, col + 1, 'right', length + 1, pathNew)
+            entranceCells = self.findPathRecursive(grid, top, left, right, bottom, row, col + 1, 'right', length + 1, pathNew)
             for p in entranceCells:
                 entranceCellList.append(p)
         if direction != 'bottom' and 'top' not in entranceAt and row > top and grid[row][col].top == 0:    # check top cell
             pathNew = list(path)
             if not appended:
                 pathNew.append([row, col])
-            entranceCells = self.findPath(grid, top, left, right, bottom, row - 1, col, 'top', length + 1, pathNew)
+            entranceCells = self.findPathRecursive(grid, top, left, right, bottom, row - 1, col, 'top', length + 1, pathNew)
             for p in entranceCells:
                 entranceCellList.append(p)
             
@@ -139,7 +139,7 @@ class RegionSolverNew(threading.Thread):
     
     
     
-    def sovleRegion(self, grid, boundary):
+    def findPath(self, grid, boundary):
         """
         Find pairs of connected entrances of the regions
         Params:
@@ -161,27 +161,27 @@ class RegionSolverNew(threading.Thread):
                             entrancePairList = entrancePairList + [[[r, c]]]
                         for i in range(len(entranceAt)):
                             if entranceAt[i] != 'right' and c + 1 < right and grid[r][c].right == 0:
-                                foundEntrances = []    # list of entrances found by findPath method
+                                foundEntrances = []    # list of entrances found by findPathRecursive method
                                 path = [[r, c]]
-                                foundEntrances = self.findPath(grid, top, left, right, bottom, r, c + 1, 'right', 1, path)
+                                foundEntrances = self.findPathRecursive(grid, top, left, right, bottom, r, c + 1, 'right', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'bottom' and r + 1 < bottom and grid[r][c].bottom == 0:
-                                foundEntrances = []    # list of entrances found by findPath method
+                                foundEntrances = []    # list of entrances found by findPathRecursive method
                                 path = [[r, c]]
-                                foundEntrances = self.findPath(grid, top, left, right, bottom, r + 1, c, 'bottom', 1, path)
+                                foundEntrances = self.findPathRecursive(grid, top, left, right, bottom, r + 1, c, 'bottom', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'left' and c - 1 >= left and grid[r][c].left == 0:
-                                foundEntrances = []    # list of entrances found by findPath method
+                                foundEntrances = []    # list of entrances found by findPathRecursive method
                                 path = [[r, c]]
-                                foundEntrances = self.findPath(grid, top, left, right, bottom, r, c - 1, 'left', 1, path)
+                                foundEntrances = self.findPathRecursive(grid, top, left, right, bottom, r, c - 1, 'left', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + foundEntrances
                             if entranceAt[i] != 'top' and r - 1 >= top and grid[r][c].top == 0:
-                                foundEntrances = []    # list of entrances found by findPath method
+                                foundEntrances = []    # list of entrances found by findPathRecursive method
                                 path = [[r, c]] 
-                                foundEntrances = self.findPath(grid, top, left, right, bottom, r - 1, c, 'top', 1, path)
+                                foundEntrances = self.findPathRecursive(grid, top, left, right, bottom, r - 1, c, 'top', 1, path)
                                 if len(foundEntrances) > 0:
                                     entrancePairList = entrancePairList + foundEntrances
         
@@ -205,7 +205,7 @@ class RegionSolverNew(threading.Thread):
         return entrancePairList
 
 
-    def FindDeadends(self, grid, boundary):
+    def findDeadends(self, grid, boundary):
         """
         Find the deadends in this region
         Param:
