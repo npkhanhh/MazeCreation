@@ -1,6 +1,4 @@
-from FindSolution import FindSolution
 import time
-from constructLists import constructLists
 import logging
 __author__ = 'Khanh'
 try:
@@ -8,10 +6,7 @@ try:
 except ImportError:
     import tkinter as tk
 import tkFileDialog as tkfd
-from PathConnector import PathConnector
-import sys
 import bot as b
-import threading
 import random as ran
 import Maze as m
 import Utility as u

@@ -53,13 +53,13 @@ class FindNodes(threading.Thread):
     
     def hasEntrance(self, grid, boundary, cell, directions):
         """
-        Check if this cell has entrance
-        A cell has entrance only if it lies at the boundary and has a missing border
+        Check if this cell has entrance.
+        A cell has entrance only if it lies at the boundary and has a missing outter border
         Params:
             grid: the whole maze
             boundary: the boundary of the current region
             cell: coordinate of the current cell
-            directions: a list to store the directions of the entrance wrt this cell, this can be use as an additional result
+            directions: a list to store the directions of the entrance with respect to  this cell, this parameter is used as an additional result
                             (a cell can have more than one entrance if it is at the corner of the region
         Return: True if the cell has entrance, False if not
         """

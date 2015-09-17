@@ -1,6 +1,5 @@
 __author__ = 'Khanh'
-import newgraphic as ng
-import Maze as m
+import graphic as ng
 import sys
 
 if len(sys.argv) == 2:
