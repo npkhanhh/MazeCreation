@@ -1,5 +1,6 @@
 import time
 import logging
+from ColorGenerator import ColorGenerator
 __author__ = 'Khanh'
 try:
     import Tkinter as tk
@@ -68,6 +69,9 @@ class GUI:
         self.deMap = []
         self.nodeMap = []
         self.solution = []
+        
+        self.colorGen = ColorGenerator()
+        self.pathColor = []
 
     def createWindow(self):
         self.frame = tk.Frame(self.master, width = self.w, height=self.h)
@@ -213,9 +217,18 @@ class GUI:
             self.drawSolution(1)
         if self.startGoalFlag.get():
             self.drawStartGoal()
+        if len(self.pathColor) > 0:
+            self.fillPathColor()
         if self.gridFlag.get():
             self.drawGrid(self.maze)
         
+        
+    def fillPathColor(self):
+        for i in range(len(self.paths)):
+            for j in range(len(self.paths[i])):
+                r = self.paths[i][j][0]
+                c = self.paths[i][j][1]
+                self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill=self.pathColor[i], outline=self.pathColor[i])
 
     def drawGrid(self, maze):
         for r in range(maze.size):
@@ -391,6 +404,10 @@ class GUI:
         self.paths = [[] for i in range(self.no_bot)]
         self.visisted = [[0 for i in range(size)] for j in range(size)]
         mode = self.dropMode.get()
+        
+        for i in range(self.no_bot):
+            self.pathColor.append('#' + self.colorGen.randomColorCode())
+        
         if mode == 'Random':
             for i in range(self.no_bot):
                 r = ran.randint(0, size-1)
@@ -440,28 +457,28 @@ class GUI:
                             r = r - 1
                             self.paths[i].append([r,c,2])
                             self.visisted[r][c] = 1
-                            self.updateTempMaze(r, c)
+                            self.updateTempMaze(r, c, self.pathColor[i])
                             move = True
                         elif ((overlap and r<size-1) or (not overlap and r<self.bots[i].maxr)) and self.tempMaze.grid[r][c].bottom == 0 and self.visisted[r+1][c] == 0:
                             self.bots[i].move(0, self.cellHeight)
                             r = r + 1
                             self.paths[i].append([r,c,0])
                             self.visisted[r][c] = 1
-                            self.updateTempMaze(r, c)
+                            self.updateTempMaze(r, c, self.pathColor[i])
                             move = True
                         elif ((overlap and c>0) or (not overlap and c>self.bots[i].minc)) and self.tempMaze.grid[r][c].left == 0 and self.visisted[r][c-1] == 0:
                             self.bots[i].move(-self.cellWidth, 0)
                             c = c - 1
                             self.paths[i].append([r,c,1])
                             self.visisted[r][c] = 1
-                            self.updateTempMaze(r, c)
+                            self.updateTempMaze(r, c, self.pathColor[i])
                             move = True
                         elif ((overlap and c<size-1) or (not overlap and c<self.bots[i].maxc)) and self.tempMaze.grid[r][c].right == 0 and self.visisted[r][c+1] == 0:
                             self.bots[i].move(self.cellWidth, 0)
                             c = c + 1
                             self.paths[i].append([r,c,3])
                             self.visisted[r][c] = 1
-                            self.updateTempMaze(r, c)
+                            self.updateTempMaze(r, c, self.pathColor[i])
                             move = True
                         if not move:
                             prev = self.paths[i][-1][2]
@@ -501,11 +518,13 @@ class GUI:
         self.draw()
 
 
-    def updateTempMaze(self, r, c):
+    def updateTempMaze(self, r, c, fillColor=None):
         self.tempMaze.grid[r][c].top = self.maze.grid[r][c].top
         self.tempMaze.grid[r][c].bottom = self.maze.grid[r][c].bottom
         self.tempMaze.grid[r][c].left = self.maze.grid[r][c].left
         self.tempMaze.grid[r][c].right = self.maze.grid[r][c].right
+        if fillColor != None:
+            self.canvas.create_rectangle(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*(r+1), fill=fillColor, outline=fillColor)
         if self.tempMaze.grid[r][c].top == 1:
             self.canvas.create_line(10+self.cellWidth*c, 10+self.cellHeight*r, 10+self.cellWidth*(c+1), 10+self.cellHeight*r)
         if self.tempMaze.grid[r][c].right == 1:
