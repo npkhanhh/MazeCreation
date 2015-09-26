@@ -40,7 +40,7 @@ class GUI:
         self.shortestPath = tk.StringVar()
         self.shortestPath.set(shortestPathString)
         self.choices = ['Backtracker', 'Recursive Backtracker', 'Kruskal']
-        self.dropChoices = ['Region', 'Random']
+        self.dropChoices = ['Region', 'Random', 'Load from file']
         self.dropMode = tk.StringVar()
         self.dropMode.set('Region')
 
@@ -439,8 +439,47 @@ class GUI:
                     self.visisted[r][c] = 1
                     self.updateTempMaze(r, c)
                     botcount+=1
+        elif mode == 'Load from file':
+            filename = tkfd.askopenfilename(filetypes=[('txt files', '.txt'), ('all files', '.*')], defaultextension='.txt')
+            f = open(filename, 'r')
+            self.no_bot = int(f.readline())
+            
+            # Read the whole file to search for out of maze and duplicated bots
+            coordinates = []
+            nOut = 0    # the number of bots that have starting point outside of the maze.
+            nDuplicate = 0  # the number of bots that have duplicated starting point
+            for i in range(self.no_bot):
+                r, c = f.readline().split()
+                r = int(r)
+                c = int(c)
+                if r<0 or r>=self.maze.size or c<0 or c>=self.maze.size:
+                    nOut += 1
+                    continue
+                elif [r, c] in coordinates:
+                    nDuplicate += 1
+                    continue
+                else:
+                    coordinates.append([r, c])
+            
+            # TODO: update self.no_bot and setup
+            self.no_bot = len(coordinates)
+            self.paths = [[] for i in range(self.no_bot)]
+            for i in range(self.no_bot):
+                self.pathColor.append('#' + self.colorGen.randomColorCode())
+            
+            for i in range(self.no_bot):
+                r, c = coordinates[i]
+                self.bots.append(b.bot(self.canvas, 0, 0, size-1, size-1, 10+self.cellWidth*c+4, 10+self.cellHeight*r+4, 10+self.cellHeight*(c+1)-4, 10+self.cellHeight*(r+1)-4, fill='black'))
+                self.paths[i].append([r,c,-1])
+                self.visisted[r][c] = 1
+                self.updateTempMaze(r, c)
+                coordinates.append([r, c])
+            if nOut > 0 or nDuplicate > 0:
+                tkmb.showinfo(None, "Load completed with warning.\n{0} bot(s) lies outside the maze\n{1} bot(s) duplicated\n(These bots were removed)".format(nOut, nDuplicate))
+                    
+                    
+            
         self.drawGrid(self.tempMaze)
-
         self.stop = False
         end = [False for i in range(self.no_bot)]
         overlap = self.overlapFlag.get()
