@@ -8,4 +8,4 @@ Some features of the program:
 - Solve the maze, with chosen start and goal (CTRL+LeftClick on a cell to set start, CTRL+RightClick on a cell to set goal)
 - Save and load maze to/from text file
 - Load bot position from file
-- Visualize the bot exploration process, each region explored by different bot will have different color.
+- Visualize the bot exploration process, each region explored by different bot will have different color. In the exploring process, the bots run in turn and in preset order.
